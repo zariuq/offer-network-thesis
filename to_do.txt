@@ -16,6 +16,8 @@
     : Note especially when complexity class/order changes
     : Are there gaps in literature of algorithms for any of these variants?
   -- Look into frameworks/languages that can be used
+    : Programming language? Rust? (>_> Maybe just because I want to learn it.)
+    : Use some graph database? (neo4j? -- There are Rust crates to access it.)
   -- Look into realistic demographics for ON (offer network) instances
     : perhaps via e-bay developers program API?
   -- Write code to generate ON instances (based on parameters)
