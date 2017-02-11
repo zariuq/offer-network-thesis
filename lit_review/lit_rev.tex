@@ -1,0 +1,108 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Arsclassica Article
+% LaTeX Template
+% Version 1.1 (10/6/14)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Lorenzo Pantieri (http://www.lorenzopantieri.net) with extensive modifications by:
+% Vel (vel@latextemplates.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[
+11pt, % Main document font size
+a4paper, % Paper type, use 'letterpaper' for US Letter paper
+oneside, % One page layout (no page indentation)
+%twoside, % Two page layout (page indentation for binding and different headers)
+headinclude,footinclude, % Extra spacing for the header and footer
+BCOR5mm, % Binding correction
+]{scrartcl}
+
+\input{structure.tex} % Include the structure.tex file which specified the document structure and layout
+
+\hyphenation{Fortran hy-phen-ation} % Specify custom hyphenation points in words with dashes where you would like hyphenation to occur, or alternatively, don't put any dashes in a word to stop hyphenation altogether
+
+%----------------------------------------------------------------------------------------
+%	TITLE AND AUTHOR(S)
+%----------------------------------------------------------------------------------------
+
+\title{\normalfont\spacedallcaps{Literature Summaries}} % The article title
+
+\author{\spacedlowsmallcaps{Zar Goertzel}} % The article author(s) - author affiliations need to be specified in the AUTHOR AFFILIATIONS block
+
+\date{\today} % An optional date to appear under the author(s)
+
+%----------------------------------------------------------------------------------------
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	HEADERS
+%----------------------------------------------------------------------------------------
+
+\renewcommand{\sectionmark}[1]{\markright{\spacedlowsmallcaps{#1}}} % The header for all pages (oneside) or for even pages (twoside)
+%\renewcommand{\subsectionmark}[1]{\markright{\thesubsection~#1}} % Uncomment when using the twoside option - this modifies the header on odd pages
+\lehead{\mbox{\llap{\small\thepage\kern1em\color{halfgray} \vline}\color{halfgray}\hspace{0.5em}\rightmark\hfil}} % The header style
+
+\pagestyle{scrheadings} % Enable the headers specified in this block
+
+%----------------------------------------------------------------------------------------
+%	TABLE OF CONTENTS & LISTS OF FIGURES AND TABLES
+%----------------------------------------------------------------------------------------
+
+\maketitle % Print the title/author/date block
+
+\setcounter{tocdepth}{2} % Set the depth of the table of contents to show sections and subsections only
+
+%\listoffigures % Print the list of figures
+
+%\listoftables % Print the list of tables
+
+%\tableofcontents % Print the table of contents
+
+%----------------------------------------------------------------------------------------
+%	AUTHOR AFFILIATIONS
+%----------------------------------------------------------------------------------------
+
+{\let\thefootnote\relax\footnotetext{\textit{Department of Computer Science, University of Copenhagen (DIKU)}}}
+
+%----------------------------------------------------------------------------------------
+
+\textit{Two Approximation Algorithms for 3-Cycle Covers} \cite{Bla1} introduces the topic, provides 2 algorithms for computing 3-cycle covers from maximum 2-cycle covers, and an algorithm combining them. Then Baser et al. prove that Max-3-DCC is APX-complete.
+
+\textit{Minimum-weight Cycle Covers and Their Approximability} \cite{Man1} provides a good summary on approximability for minimum and maximum weight cycle covers. First, I learned that Min-D-DCC is known as the assignment problem, which is likely what we need for the basic Offer Network. Results for a constant factor approximation for L-cycle (general) covers for maximum weight are presented and proven, yet the minimum case is harder. These approximations need the triangle inequality.
+
+Read \textit{From Graph Matching Problem to Assignment Problem slides}\footnote{ \url{http://romain.raveaux.free.fr/document/FromGraphMatchingToAssignmentProblem.pdf}}. Good overview and visual explanation of assignment problem. Not clear how to use for ONs.
+
+MIT \textit{Lecture Notes on Bipartite Matching}\footnote{\url{http://math.mit.edu/~goemans/18433S09/matching-notes.pdf}} cover the minimum weight perfect matching set-up (which then reduces to minimum-cost flow if desired), duality with vertex covers (not vertex cycle covers), and some algorithms to solve them.
+
+MIT \textit{Advanced Methods in Algorithms HW 5}\footnote{\url{https://courses.cs.ut.ee/MTAT.03.286/2014_fall/uploads/Main/Solutions-HW5-fall2014}} explains how to use perfect matching in a bipartite graph to find a vertex-disjoint cylce cover, basically, in ON terminology, by duplicating each task and having an "offer" and a "request" side to turn the directed graph into an undirected graph.
+
+\textit{Expertise Matching via Constraint-Based Optimization} \cite{Tan1} discusses the problem of matching experts to problems while taking account of various constraints: load balancing, spreading top-level experts among problems, etc. Provide convex min-cost flow problem formulation. Also a way to correct the matching online via user feedback, potentially useful in the case one user in a proposed match (in an ON) declines and others agree!
+
+\textit{Open-WBO: a Modular MaxSAT Solver}\footnote{\url{http://baldur.iti.kit.edu/sat2014/slides/52.pdf}} provisdes a good brief introduction to what weighted boolean optimization is, and the approaches taken.
+
+\textit{Open-WBO: A Modular MaxSAT Solver} covers the contents of the slides in more detail, the methods used to allow more natural constraints (that are converted to CNF encodings), how long these take, and the performance using different SAT solving algorithms. Worth looking into given assignment problem and max-flow are often solved using linear programming (although this doesn't seem amenable to online?)
+
+---------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+\renewcommand{\refname}{\spacedlowsmallcaps{References}} % For modifying the bibliography heading
+
+\bibliographystyle{unsrt}
+
+\bibliography{lit.bib} % The file containing the bibliography
+
+%----------------------------------------------------------------------------------------
+
+\end{document}

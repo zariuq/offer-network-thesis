@@ -1,0 +1,38 @@
+
+
+  -- Keep to-do list up to date
+  -- Literature
+    : MiniSat paper
+      : online?
+      : look-at before paper for overview: https://www.msoos.org/minisat-faq/
+    : Web-of-needs, and other related projects
+    : Assignment problem, and other cycle cover problems
+    : Market performance metrics
+  -- Write up specification of offer networks
+    : Start minimal
+    : Specify addable/desirable features
+  -- Determine problem complexity and adaptable algorithms
+    : Start minimal
+    : Note especially when complexity class/order changes
+    : Are there gaps in literature of algorithms for any of these variants?
+  -- Look into frameworks/languages that can be used
+  -- Look into realistic demographics for ON (offer network) instances
+    : perhaps via e-bay developers program API?
+  -- Write code to generate ON instances (based on parameters)
+  -- Adapt library / implement algorithm to match on instances
+  -- Set up together as Simulator for experiments
+  -- Run trials & measurements
+    : Test, test, test!
+  -- If time permits, try to extend features.
+    : which methods would be easier to port to decentralized systems?
+
+
+Personal Notes:
+
+Ahh, so with assignment problem, you'd need many "max cost 'do nothing'" values in the matrix for ONs. On the other hand, vertex-disjoint cycle cover just needs a bipartite graph for 'from' tasks and 'to' tasks, i.e., whether the tasks are offered or requested! Not sure how this would deal with duplicates.
+
+Interestingly, even reduced to a graph problem, many solutions are via linear programming. That may be an inescapable route, but online? If the methods are iterative... :/ Wish I had studied more online algorithms.
+
+So using the min flow over doubled bipartite graph for solving the vertex cycle cover problem with, say, Ford-Fulkerson algorithm, we're looking at O(#(request, offer) pairs)? Hmm . . .
+
+Next steps for reading may be enhanced by starting to specify the problem in more formal detail (^_^)

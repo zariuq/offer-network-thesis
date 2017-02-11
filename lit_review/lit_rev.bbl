@@ -1,0 +1,22 @@
+\begin{thebibliography}{1}
+
+\bibitem{Bla1}
+Markus Bl\"{a}ser and Bodo Manthey.
+\newblock Two approximation algorithms for 3-cycle covers.
+\newblock In {\em Proceedings of the 5th International Workshop on
+  Approximation Algorithms for Combinatorial Optimization}, APPROX '02, pages
+  40--50, London, UK, UK, 2002. Springer-Verlag.
+
+\bibitem{Man1}
+Bodo Manthey.
+\newblock Minimum-weight cycle covers and their approximability.
+\newblock {\em CoRR}, abs/cs/0609103, 2006.
+
+\bibitem{Tan1}
+Wenbin Tang, Jie Tang, and Chenhao Tan.
+\newblock Expertise matching via constraint-based optimization.
+\newblock In {\em Proceedings of the 2010 IEEE/WIC/ACM International Conference
+  on Web Intelligence and Intelligent Agent Technology - Volume 01}, WI-IAT
+  '10, pages 34--41, Washington, DC, USA, 2010. IEEE Computer Society.
+
+\end{thebibliography}
