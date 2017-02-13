@@ -35,6 +35,5 @@ Ahh, so with assignment problem, you'd need many "max cost 'do nothing'" values 
 
 Interestingly, even reduced to a graph problem, many solutions are via linear programming. That may be an inescapable route, but online? If the methods are iterative... :/ Wish I had studied more online algorithms.
 
-So using the min flow over doubled bipartite graph for solving the vertex cycle cover problem with, say, Ford-Fulkerson algorithm, we're looking at O(#(request, offer) pairs)? Hmm . . .
-
-Next steps for reading may be enhanced by starting to specify the problem in more formal detail (^_^)
+So using the min flow over doubled bipartite graph for solving the vertex cycle cover problem with, say, Ford-Fulkerson algorithm, we're looking at O(#(request, offer) pairs)? Hmm . . ..
+Except this is for finding the full cycle cover, not just the maximum... or...?
