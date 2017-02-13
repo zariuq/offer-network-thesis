@@ -1,7 +1,6 @@
-papers/
-lit_review/litreview.bbl
-lit_review/litreview.log
-lit_review/litreview.aux
-lit_review/litreview.blg
-lit_review/litreview.out
-lit_review/texput.log
+*.pdf
+*.out
+*.log
+*.aux
+*.bbl
+*.blg
