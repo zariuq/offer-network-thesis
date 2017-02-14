@@ -6,7 +6,7 @@
       : online?
       : look-at before paper for overview: https://www.msoos.org/minisat-faq/
     : Web-of-needs, and other related projects
-    : Assignment problem, and other cycle cover problems
+    : cycle cover problems
     : Market performance metrics
   -- Write up specification of offer networks
     : Start minimal
@@ -37,3 +37,7 @@ Interestingly, even reduced to a graph problem, many solutions are via linear pr
 
 So using the min flow over doubled bipartite graph for solving the vertex cycle cover problem with, say, Ford-Fulkerson algorithm, we're looking at O(#(request, offer) pairs)? Hmm . . ..
 Except this is for finding the full cycle cover, not just the maximum... or...?
+
+Okay, Kidney Exchange is a real-life example of offer-net like exchanges, including teh problem that anyone who needs a surgery can "opt out" at the last minute. Gotta look at how that's really done in practice!
+
+Hmm, for testing, do we really need much more than just "identifying cycles"?
