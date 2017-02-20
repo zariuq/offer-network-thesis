@@ -95,9 +95,15 @@ MIT \textit{Advanced Methods in Algorithms HW 5}\footnote{\url{https://courses.c
 
 \textit{Lecture \#10: Kidney Exchange}\footnote{\url{http://theory.stanford.edu/~tim/f13/l/l10.pdf}} from Stanford introduces the Kidney Exchange problem (a real instance of what ONs aim to do) and using Matching Algorithms (only for pairs :<) and the Top Trading Cycle Algorithm to facilitate them. Likely provides good list of references.
 
-\textit{Matching Markets and Market Design}\footnote{\url{http://www.econ.cam.ac.uk/events/seminars/Marshall_Lecture/2013-14/Marshall-LectureII-kidneys-and-repugnance-February-2014.pdf}} provides good intro to offer networks in the context of Kidney exchanges (because kidneys cannot be sold). An interesting theorem on large graphs having efficient allocations with cycles of size at most 3. Effect of gifts, non-directed donors, seems interesting! (Facilitating more exchanges with high sensitivity patients (high PRA -- percentage reactive antibodies).)
+\textit{Matching Markets and Market Design}\footnote{\url{http://www.econ.cam.ac.uk/events/seminars/Marshall_Lecture/2013-14/Marshall-LectureII-kidneys-and-repugnance-February-2014.pdf}} provides good intro to offer networks in the context of Kidney exchanges (because kidneys cannot be sold). An interesting theorem on large graphs having efficient allocations with cycles of size at most 3. (Moreover, that ($>3$)-way didn't provide many additional benefits.) Effect of gifts, non-directed donors, seems interesting! (Facilitating more exchanges with high sensitivity patients (high PRA -- percentage reactive antibodies).)
 
 \textit{Kidney Exchange}\footnote{\url{http://www.iwgts.fea.usp.br/wp-uploads/2014/08/Kidney-Exchange.pdf}} by the same author goes into more detail. Interesting theorem on a bound for individually rational matches when seeking optimal matchings of 3+ cycles.
+
+\textit{Efficient Kidney Exchange: Coincidence of Wants in Markets with Compatibility-Based Preferences} \cite{Rot2} goes into more detail, such as proof of maximum number of kidney transparent with only 2-matches. As well as the marginal benefit of 2,3,...n-way matches! A maximal matching, under some assumptions, with n types requires at most n-way exchanges. Ultimately solved via Integer Programming.
+
+\textit{Kidney Exchange} \cite{Rot1} provides a TTC/TTCC implementation for finding kidney exchanges, rather than integer programming in \cite{Rot2} (more recent). TTC seems interesting for dealing with preferences (and online matching?)
+
+\textit{The relationship between top trading cycles mechanism and top trading cycles and chains mechanism} \cite{Kri1} suggests that TTC and TTCC are equivalent given the chain-selecting heuristic provided in \cite{Rot1}, giving Pareto efficiency.
 
 ---------------------------------------------------------------
 %	BIBLIOGRAPHY

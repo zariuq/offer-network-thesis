@@ -7,6 +7,7 @@
       : look-at before paper for overview: https://www.msoos.org/minisat-faq/
     : Web-of-needs, and other related projects
     : cycle cover problems
+    : Just how to find cycles in directed graphs. Period.
     : Market performance metrics
   -- Write up specification of offer networks
     : Start minimal
@@ -38,6 +39,14 @@ Interestingly, even reduced to a graph problem, many solutions are via linear pr
 So using the min flow over doubled bipartite graph for solving the vertex cycle cover problem with, say, Ford-Fulkerson algorithm, we're looking at O(#(request, offer) pairs)? Hmm . . ..
 Except this is for finding the full cycle cover, not just the maximum... or...?
 
-Okay, Kidney Exchange is a real-life example of offer-net like exchanges, including teh problem that anyone who needs a surgery can "opt out" at the last minute. Gotta look at how that's really done in practice!
+Okay, Kidney Exchange is a real-life example of offer-net like exchanges, including teh problem that anyone who needs a surgery can "opt out" at the last minute. Gotta look at how that's really done in practice! With positive crossmatches (highly sensitive antibodies preventing an otherwise compatible match), even seemingly matched pairs entering into the system can prove generally beneficial! Perhaps also a nuance with generic offer networks: even if you have a friend willing to make some exchange, entering your (offer, request)s into the system could lead to a better match (at least for the system as a whole).
+
+TTCC seems interesting for (online) processing once preferences are added to an ON matcher: (potentially) providing Pareto efficient solutions. :o And there's a paper showing this, with the correct chain selection rule, is equivalent to TTC.
+
+Representing cycles as (r1o1,r2o2,r3o3) could work, when writing papers at least.
+
+> clearinghouse
+-- Can also be used to more efficiently run markets where wages/money are involved.
 
 Hmm, for testing, do we really need much more than just "identifying cycles"?
+Could one then seek out strongly connected components, which is linear?
