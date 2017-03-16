@@ -2,20 +2,10 @@
 
   -- Keep to-do list up to date
   -- Literature
-    : MiniSat paper
-      : online?
-      : look-at before paper for overview: https://www.msoos.org/minisat-faq/
     : Web-of-needs, and other related projects
-    : cycle cover problems
-    : Just how to find cycles in directed graphs. Period.
     : Market performance metrics
   -- Write up specification of offer networks
-    : Start minimal
-    : Specify addable/desirable features
   -- Determine problem complexity and adaptable algorithms
-    : Start minimal
-    : Note especially when complexity class/order changes
-    : Are there gaps in literature of algorithms for any of these variants?
   -- Look into frameworks/languages that can be used
     : Programming language? Rust? (>_> Maybe just because I want to learn it.)
     : Use some graph database? (neo4j? -- There are Rust crates to access it.)
@@ -50,3 +40,20 @@ Representing cycles as (r1o1,r2o2,r3o3) could work, when writing papers at least
 
 Hmm, for testing, do we really need much more than just "identifying cycles"?
 Could one then seek out strongly connected components, which is linear?
+
+\-----\
+Okay,
+
+So finding all cycles is P in terms of graph size and number of cycles, yet finding the maximum cylce packing is NP(C?). There are (logn)-approx algorithms for this, vene with weighted edges. So these methods look feasible. It's not quite clear how to neatly do AND/ORs, and additional constraints may best be done in a second step after finding cycles.
+
+Some form of (distributed) DFS could be used to look for new cycles when added in an online manner.
+
+However, practically speaking, in say smart auction clearinghouses and kidney exchanges, linear programming seems to be the method of choice. That is, lots of work has been put into solving (I)LPs quickly evne though NPC. Additionally, adding new constraints is, in many cases, very simple.... There is still the risk of changing the problem from one that can be solved easily to one that can't -- within the "NPC" class.
+
+Of course, in a system, it could be possible to maintain a graph represenattion, use WBO (or some othre ILP formalization) for bulk matching, and graph-based methods as new offer/requsets are made.
+
+For now, I'll write up and re-check the WBO formalization for offer networks in the thesis draft.
+
+And then figure out what library to use... and start with the generation.
+
+Should I use some graph database... how else will I store the instances?

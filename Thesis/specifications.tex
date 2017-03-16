@@ -23,11 +23,20 @@ A matching of users who can satisfy each other is a vertex cycle. See the simple
   \end{tikzpicture}
 \end{center}
 
-A maximum vertex cycle cover is then a maximum matching on the network.
+The cycle packing problem \cite{Kri} characterises the goal of the matcher: find as many cycles with distinct edges (offer-request pairs). This problem is NP-Hard, although \cite{Kri} has an $\bO(\sqrt{\log n})$-approximation algorithm for it. I'm not yet clear whether the algorithm works with multiple edges between two nodes.
 
-A full vertex cycle cover can be found via creating a bipartite graph $G = (T,T, E)$ with the edges representing $(\mbox{offer} \to \mbox{request})$, and then adding source and sink nodes to make a network flow problem.
+The matching problem can also be stated in terms of Weighted Boolean Optimization, a form of Integer Programming. Some additional features may be easier to add in this case, which is a common, reliable choice in the field despite being NP-complete.
 
-For maximum vertex cycle cover . . .
+Below is a list of potentially desirable features that don't qualify for an MVP\footnote{minimal viable prototype}:
+\begin{itemize}
+  \item Reputation biased matching
+  \item Preferences for matching based on
+    \begin{itemize}
+      \item User preferences
+      \item Task prefreences
+    \end{itemize}
+  \item ORs and ANDs of offers or request
+\end{itemize}
 
 
 \end{document}
