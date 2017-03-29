@@ -27,6 +27,12 @@ The cycle packing problem \cite{Kri} characterises the goal of the matcher: find
 
 The matching problem can also be stated in terms of Weighted Boolean Optimization, a form of Integer Programming. Some additional features may be easier to add in this case, which is a common, reliable choice in the field despite being NP-complete.
 
+The problem has been extensively studied for kidney exchanges \cite{Bir}, a sub-class of the offer network problem. In the kidney exchange problem, one has incompatible patient-donor pairs to be matched. This can easily be mapped into the offer network framework as: (offer=donor, request=patient). Kidney exchange networks tend to be thick (as there are only blood-types), and there is strong pressure to find exact algorithms for optimal matches as any sub-optimal match allows more patients to die.
+
+An algorithm to find perfect weighted matchings in bipartite graph can be used to discover the optimal match in polynomial time \cite{Bir}. The bipartite graph has one side for Offers and one for Requests, thus each (offer=$t_a$, request=$t_b$) pair has two nodes created with edge weight $0$. Next an edge is created between the offfer node and every request node for $t_a$ with weight $> 0$. Then a maximum weight perfect matching algorithm can be used.
+
+The drawback is that long-cycles are possible, and in the dense graph for kidney exchange, very likely. Each user reserves the right to refuse a suggested match, so longer matches are more likely to be rejected, and in the kidney case, require organizing dozens of simultaneous surgeries. However, bounding the match-size results in an NP-hard problem \cite{Bir}.
+
 Below is a list of potentially desirable features that don't qualify for an MVP\footnote{minimal viable prototype}:
 \begin{itemize}
   \item Reputation biased matching

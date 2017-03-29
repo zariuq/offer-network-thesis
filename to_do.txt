@@ -1,17 +1,19 @@
-
+April 10th -- 9 am
 
   -- Keep to-do list up to date
   -- Literature
     : Web-of-needs, and other related projects
     : Market performance metrics
+      : What does ideal performance look like?
+  -- Think about graph-based heuristics
+    : As you don't need to necessarily find 100% of the matches, 80%'d be fine
   -- Write up specification of offer networks
   -- Determine problem complexity and adaptable algorithms
-  -- Look into frameworks/languages that can be used
-    : Programming language? Rust? (>_> Maybe just because I want to learn it.)
-    : Use some graph database? (neo4j? -- There are Rust crates to access it.)
   -- Look into realistic demographics for ON (offer network) instances
     : perhaps via e-bay developers program API?
+    : try white-papers in industry
   -- Write code to generate ON instances (based on parameters)
+    : Now with non-random instances!
   -- Adapt library / implement algorithm to match on instances
   -- Set up together as Simulator for experiments
   -- Run trials & measurements
@@ -22,38 +24,4 @@
 
 Personal Notes:
 
-Ahh, so with assignment problem, you'd need many "max cost 'do nothing'" values in the matrix for ONs. On the other hand, vertex-disjoint cycle cover just needs a bipartite graph for 'from' tasks and 'to' tasks, i.e., whether the tasks are offered or requested! Not sure how this would deal with duplicates.
-
-Interestingly, even reduced to a graph problem, many solutions are via linear programming. That may be an inescapable route, but online? If the methods are iterative... :/ Wish I had studied more online algorithms.
-
-So using the min flow over doubled bipartite graph for solving the vertex cycle cover problem with, say, Ford-Fulkerson algorithm, we're looking at O(#(request, offer) pairs)? Hmm . . ..
-Except this is for finding the full cycle cover, not just the maximum... or...?
-
-Okay, Kidney Exchange is a real-life example of offer-net like exchanges, including teh problem that anyone who needs a surgery can "opt out" at the last minute. Gotta look at how that's really done in practice! With positive crossmatches (highly sensitive antibodies preventing an otherwise compatible match), even seemingly matched pairs entering into the system can prove generally beneficial! Perhaps also a nuance with generic offer networks: even if you have a friend willing to make some exchange, entering your (offer, request)s into the system could lead to a better match (at least for the system as a whole).
-
-TTCC seems interesting for (online) processing once preferences are added to an ON matcher: (potentially) providing Pareto efficient solutions. :o And there's a paper showing this, with the correct chain selection rule, is equivalent to TTC.
-
-Representing cycles as (r1o1,r2o2,r3o3) could work, when writing papers at least.
-
-> clearinghouse
--- Can also be used to more efficiently run markets where wages/money are involved.
-
-Hmm, for testing, do we really need much more than just "identifying cycles"?
-Could one then seek out strongly connected components, which is linear?
-
-\-----\
-Okay,
-
-So finding all cycles is P in terms of graph size and number of cycles, yet finding the maximum cylce packing is NP(C?). There are (logn)-approx algorithms for this, vene with weighted edges. So these methods look feasible. It's not quite clear how to neatly do AND/ORs, and additional constraints may best be done in a second step after finding cycles.
-
-Some form of (distributed) DFS could be used to look for new cycles when added in an online manner.
-
-However, practically speaking, in say smart auction clearinghouses and kidney exchanges, linear programming seems to be the method of choice. That is, lots of work has been put into solving (I)LPs quickly evne though NPC. Additionally, adding new constraints is, in many cases, very simple.... There is still the risk of changing the problem from one that can be solved easily to one that can't -- within the "NPC" class.
-
-Of course, in a system, it could be possible to maintain a graph represenattion, use WBO (or some othre ILP formalization) for bulk matching, and graph-based methods as new offer/requsets are made.
-
-For now, I'll write up and re-check the WBO formalization for offer networks in the thesis draft.
-
-And then figure out what library to use... and start with the generation.
-
-Should I use some graph database... how else will I store the instances?
+First, I'll break the P-time matching! Yargh!
