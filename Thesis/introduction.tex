@@ -1,0 +1,30 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{Introduction}
+In this thesis I explore the feasibility of using optimization algorithms to facilitate barter as a market mechanism.
+
+Barter has historically been infeasible on the large scale, and prior to money various methods of debt tallying were used \cite{Gra1}. One difficulty is that in barter both parties in an exchange must have a coincidence of wants simultaneously; money or debt allow a service to be offered before its equal is received. Another difficulty with barter is that exchanges involving more than two parties will be difficult to organize, whereas money allows someone to sell to one person and buy from another.
+
+In this thesis, I will develop a minimal viable prototype (MVP) to experiment with how optimization algorithms can be used to overcome this second difficulty: allowing and suggesting k-way exchanges ($k>2$).
+
+I call the network an offer network. Users upload pairs of requests and what they offer to exchange for them. In principle, any service or goods can be offered; however in MVP principle, I will not initially distinguish them. The prototype will be dynamic, so each timestep some new offer-request pairs will be uploaded, some taken down, and there will be some new users. Every few timesteps an optimization algorithm will be run in batch to suggest exchanges to users, which they can accept or reject.
+
+Beyond setting up the prototype, various random and some social media graphs will be used for testing: perhaps barter is only feasible on some types of graphs.
+
+Next a few metrics will be used to measure the market performance allowed by this mechanism:
+\begin{itemize}
+  \item Average wait time for an offer to be matched (dynamic)
+  \item Percent of toal request satisfied (static or dynamic)
+  \item Comparison to maximum possible matching (assuming all suggests are suggested)
+  \item Comparison to network with only 2-way exchanges
+  \item Comparison to network with money-mediated exchanges \footnote{I'm not quite sure how to do this yet.}
+\end{itemize}
+
+\section{Related Work}
+There has been extensive for kidney exchanges \cite{Bir}\cite{Rot1}\cite{Rot2}\cite{Abr1}, a sub-class of the offer network problem, where barter has proven effective. In the kidney exchange problem, one has incompatible patient-donor pairs to be matched. This can easily be mapped into the offer network framework as: (offer=donor, request=patient). Kidney exchange networks tend to be thick (as there are only blood-types), and there is strong pressure to find exact algorithms for optimal matches as any sub-optimal match allows more patients to die.
+
+A suggested exchange is a cycle in a graph representation of an offer network. The cycle packing problem \cite{Kri} characterises the goal of the matcher: find as many cycles with distinct edges (offer-request pairs). This problem is NP-Hard, although \cite{Kri} has an $\bO(\sqrt{\log n})$-approximation algorithm for it. I'm not yet clear whether the algorithm works with multiple edges between two nodes.
+
+\end{document}

@@ -2,8 +2,8 @@
 
 \begin{document}
 
-\section{Offer Networks}
-An \textbf{offer network} instance can be formally modeled as a directed graph where vertices $t \in T$ represent tasks and labeled directed edges $(t_a,t_b) : u_1$ represent an offer by user $u_1$ to do task $t_a$ in exchange requested task $t_b$.
+\section{Offer Network Specifciation}
+An \textbf{offer network} instance can be formally modeled as a directed graph, $G$, where vertices $t \in T$ represent tasks, $u \in U$ users, and labeled directed edges $(t_a,t_b) : u_1$\footnote{Can be a hypergraph if one wants user nodes rather than labels.}\footnote{In the current implementation, actually a multigraph: there can be multiple edges ($t_a,t_b$).} represent an offer by user $u_1$ to do task $t_a$ in exchange requested task $t_b$. I will call edgesCall this the task-centric graph formulation.
 \begin{center}
   \begin{tikzpicture}
     \node[draw, circle] (ta) at (0,0) {$t_a$};
@@ -23,17 +23,24 @@ A matching of users who can satisfy each other is a vertex cycle. See the simple
   \end{tikzpicture}
 \end{center}
 
-The cycle packing problem \cite{Kri} characterises the goal of the matcher: find as many cycles with distinct edges (offer-request pairs). This problem is NP-Hard, although \cite{Kri} has an $\bO(\sqrt{\log n})$-approximation algorithm for it. I'm not yet clear whether the algorithm works with multiple edges between two nodes.
+\subsection{Dynamic Offer Network Specification}
+The dynamic offer network is modeled in terms of discrete timesteps: $s = 0, 1, 2 \dots$.
+Let $N_tt, N_d, N_m \in \mathbb{N}$, $p \in [0,1]$ be constants.
 
-The matching problem can also be stated in terms of Weighted Boolean Optimization, a form of Integer Programming. Some additional features may be easier to add in this case, which is a common, reliable choice in the field despite being NP-complete.
+Between each timestep the following events can take place:
+\begin{itemize}
+  \item Add $N_tt$ new edges to the graph
+  \item Remove $N_d$ unsatisfied edges
+\end{itemize}
 
-The problem has been extensively studied for kidney exchanges \cite{Bir}, a sub-class of the offer network problem. In the kidney exchange problem, one has incompatible patient-donor pairs to be matched. This can easily be mapped into the offer network framework as: (offer=donor, request=patient). Kidney exchange networks tend to be thick (as there are only blood-types), and there is strong pressure to find exact algorithms for optimal matches as any sub-optimal match allows more patients to die.
+In addition every $N_m$ steps, an optimization algorithm is run in batch to suggest exchanges to users. An exchange is accepted if each edge is accepted by its user. Users accept the exchange for an edge with probability $p$. Rejected exchanges are left as is. All edges in accepted exchanges are removed from the graph.
 
-An algorithm to find perfect weighted matchings in bipartite graph can be used to discover the optimal match in polynomial time \cite{Bir}. The bipartite graph has one side for Offers and one for Requests, thus each (offer=$t_a$, request=$t_b$) pair has two nodes created with edge weight $0$. Next an edge is created between the offfer node and every request node for $t_a$ with weight $> 0$. Then a maximum weight perfect matching algorithm can be used.
 
-The drawback is that long-cycles are possible, and in the dense graph for kidney exchange, very likely. Each user reserves the right to refuse a suggested match, so longer matches are more likely to be rejected, and in the kidney case, require organizing dozens of simultaneous surgeries. However, bounding the match-size results in an NP-hard problem \cite{Bir}.
+\subsection{Additional Features}
 
-Below is a list of potentially desirable features that don't qualify for an MVP\footnote{minimal viable prototype}:
+The graph model can be made more sophisticated by drawing $N_tt$ and $N_d$ from a distribution, probabilistically adding new tasks, etc.
+
+Below is a list of potentially desirable features of an offer network that don't qualify for an MVP:
 \begin{itemize}
   \item Reputation biased matching
   \item Preferences for matching based on

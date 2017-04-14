@@ -1,17 +1,30 @@
-April 10th -- 9 am
+10th of May -- morning
+
+Is there a sensible way of running this on social network graphs?
+
+2) Finish plumbing
+3) find <k cycle algorithm to implement or use.
 
   -- Keep to-do list up to date
   -- Literature
     : Web-of-needs, and other related projects
     : Market performance metrics
       : What does ideal performance look like?
+      : Dynamic setting
+        : Average waiting time of user to get task fulfilled
   -- Think about graph-based heuristics
     : As you don't need to necessarily find 100% of the matches, 80%'d be fine
-  -- Write up specification of offer networks
-  -- Determine problem complexity and adaptable algorithms
+    : Start from cycle-basis?
   -- Look into realistic demographics for ON (offer network) instances
     : perhaps via e-bay developers program API?
     : try white-papers in industry
+    : {Seems not that much good literature, many related things do something pretty artificial.}
+      : 1) Draw edges for tasks from non-uniform distributions
+      : 2) Graph with clusters of task-types
+      - scale free seems awkward, well, depends on hub structure
+      - why not try erdos-renyi
+      - small-world seems cool
+      Not really correct, but could be fun: https://snap.stanford.edu/data/p2p-Gnutella04.html
   -- Write code to generate ON instances (based on parameters)
     : Now with non-random instances!
   -- Adapt library / implement algorithm to match on instances
@@ -19,9 +32,43 @@ April 10th -- 9 am
   -- Run trials & measurements
     : Test, test, test!
   -- If time permits, try to extend features.
+    : benefit of chains! (gifts!)
     : which methods would be easier to port to decentralized systems?
 
 
 Personal Notes:
 
 First, I'll break the P-time matching! Yargh!
+
+ebay: (-- ONs)
+      skewed degree distribution (few big sellers)
+        -- likely in ONs too, actually, likely almost none (at first)
+      disassortativity (users don't necessarily look for products they sell)
+        -- likely as well, although to a lesser degree than in ebay
+      densification (reputation)
+        -- if the feature is added
+      no rich club connectivity
+        -- yeah, prolly not in particular
+      only linear preferential attachment observed
+
+Watts-Strogatz model:
+  small world / clustering
+
+
+
+Hmm, in random graphs,
+  nodes == tasks
+  edges == (offer, request) or (request, offer) (randomly choose again?)
+    -- unless a random directed model.
+
+Okay, sounds doable enough ;-)
+
+
+watts_strogatz_graph(n, k, p, seed=None)[source]
+Return a Watts-Strogatz small-world graph.
+
+Parameters:
+n (int) – The number of nodes
+k (int) – Each node is connected to k nearest neighbors in ring topology
+p (float) – The probability of rewiring each edge
+seed (int, optional) – Seed for random number generator (default=None)

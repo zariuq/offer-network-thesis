@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import numpy.random as npr
 import itertools
+import networkx as nx
 from munkres import munkres
 
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "iwin"))
@@ -31,7 +32,7 @@ def add_ORnode(node_id, node):
     offer   = "task" + str(node[0])
     request = "task" + str(node[1])
     user    = "user" + str(node[2])
-    node_name = "OR" + "_".join([offer,request,user])
+    node_name = "OR" + "_".join([offer,request,user,str(node_id)])
     command = " \n".join(
         ["CREATE ({0}:ORnode {{id:\'{1}\', offer:\'{2}\', request:\'{3}\', user:\'{4}\'}}) "
             .format(node_name, node_id, node[0], node[1], node[2])
@@ -55,11 +56,26 @@ def genRandomNodes(num, num_options, num_users):
             candidates + genRandomNodes(diff, num_options, num_users)
     return candidates
 
-def generate(Ntasks, Nusers, NORnodes):
-    #tasks = ["Task" + str(i) for i in range(1,Ntasks + 1)]
-    #users = ["User" + str(i) for i in range(1,Nusers + 1)]
+def generate_random(Ntasks, Nusers, NORnodes):
+    print("Generating Random Graph")
     ornodes = genRandomNodes(NORnodes, Ntasks, Nusers)
+    generate(Ntasks, Nusers, NORnodes, ornodes)
+
+# Generate random Watts Strogatz graph
+# p :- probaility of rewiring edge
+# interesting when Ntasks >> k >> ln(N)
+def generate_wsg(Ntasks, Nusers, NORnodes, p):
+    # n = Ntasks
+    k = 2 * int(NORnodes / Ntasks)
+    num = int((k / 2) * Ntasks) # NORnodes rounded
+    G = (np.array([*(nx.watts_strogatz_graph(Ntasks,k,p)).edges()])).transpose()
+    orUsers = npr.randint(Nusers,size=(num))
+    ornodes = list(zip(G[0], G[1], orUsers))
+    generate(Ntasks, Nusers, num, ornodes)
+
+def generate(Ntasks, Nusers, NORnodes, ornodes):
     with driver.session().begin_transaction() as tx:
+        print("Creating cypher commands")
         commands = []
         for i in range(0, Ntasks):
             commands.append(add_task(i+1))
@@ -68,6 +84,7 @@ def generate(Ntasks, Nusers, NORnodes):
         for i in range(0, NORnodes):
             commands.append(add_ORnode(i+1, ornodes[i]))
         command = " \n".join(commands)
+        print("Running transaction.")
         tx.run(command)
 
 # Transform task-centric graph into bipartite graph
@@ -80,6 +97,7 @@ def task_to_bipartite():
     one_weights = []
     with driver.session() as session:
         #1
+        print("Getting offers and requests.")
         result = session.run("match (:Task)-[]-(node:ORnode)-[]->(:Task) "
                              "return node ")
         for record in result:
@@ -89,6 +107,7 @@ def task_to_bipartite():
             zero_weights.append((node['offer'], node['request'], node['id']))
 
         #2
+        print("Getting tasks.")
         tasks = dict() # {([offers],[requests])}
         result = session.run("match (task:Task)-[]-(node:ORnode)-[]-(:Task) "
                              "return task, node ")
@@ -103,6 +122,7 @@ def task_to_bipartite():
             #print("\n".join("%s: %s" % (key, record[key]) for key in record.keys()))
             #print("\n")
 
+        print("Adding offers, requests, and zero-edges.")
         commands = []
         for offer in offers:
             commands.append("CREATE (offer{0}_{1}:Offer {{task:\'{0}\', node_id:\'{1}\', user:\'{2}\'}}) "
@@ -114,12 +134,14 @@ def task_to_bipartite():
             commands.append("CREATE ((offer{0}_{2})-[:bNullEdge {{weight:0}}]->(request{1}_{2})) "
                                 .format(edge[0],edge[1],edge[2]))
                                 #,"CREATE ({0})-[:Own]->({1}) ".format(user, node_name)])
+        print("Adding real edges.")
         for task in tasks.values():
             for offer, request in itertools.product(task[0], task[1]):
                 commands.append("CREATE ((offer{0})<-[:bEdge {{weight:1}}]-(request{1})) "
                                     .format(offer, request))
 
         command = " \n".join(commands)
+        print("Running transaction.")
         with session.begin_transaction() as tx:
             tx.run(command)
 
@@ -131,6 +153,7 @@ def bmatch():
     iRequests = dict()
     edges = []
     with driver.session() as session:
+        print("Getting offers.")
         result = session.run("match (offer:Offer) return offer ")
         num_offers = 0
         for record in result:
@@ -139,10 +162,12 @@ def bmatch():
             num_offers += 1
         result = session.run("match (request:Request) return request ")
         num_requests = 0
+        print("Getting requests.")
         for record in result:
             requests[tuple(record['request'].values())] = num_requests
             iRequests[num_requests] = record['request']
             num_requests += 1
+        print("Getting edges.")
         resultEdge = session.run("match (offer:Offer)-[edge:bEdge]-(request:Request) "
                              "return offer, request, edge ")
         resultNullEdge = session.run("match (offer:Offer)-[edge:bNullEdge]-(request:Request) "
@@ -165,7 +190,9 @@ def bmatch():
     #print(edges)
     #for i in range(0,size):
     #    print(B[i])
+    print("Matching.")
     matching = munkres(B)
+    print("Generating match graph.")
     with driver.session() as session:
         commands = []
         for match in np.argwhere(matching==True):
@@ -178,6 +205,7 @@ def bmatch():
                                +"WITH offer as offer, request as request LIMIT 1 "
                                +"CREATE ((offer)-[:Match]->(request)) ")
         #command = " \n".join(commands)
+        print("Running transaction. There are {0} matches".format(len(commands)))
         with session.begin_transaction() as tx:
             for command in commands:
                 tx.run(command)
@@ -213,6 +241,7 @@ def print_instructions():
     print("Error. Use code.")
     print("-d to delete the graph. -d a for all, g for graph, b for bipartite, mb for bipartite match")
     print("-gr [Ntasks Nusers NORnodes] to generate a random graph, [] denotes optionality")
+    print("-gwsg [Ntasks Nusers [NORnodes p]] to generate a random Watts Strogatz graph")
     print("-tb to transform task-centric graph into a bipartite graph.")
     print("-mb to get maximum weight matching via bipartite graph.")
 
@@ -233,9 +262,18 @@ if __name__ == "__main__":
                 delete_all()
         elif sys.argv[1] == "-gr":
             if num_args == 5:
-                generate(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+                generate_random(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
             else:
-                generate(50, 100, 50) #default
+                generate_random(50, 100, 50) #default
+        elif sys.argv[1] == "-gwsg":
+            if num_args == 4:
+                Ntasks = int(sys.argv[2])
+                NORnodes = 3*int(Ntasks * np.log(Ntasks)) # so N >> k >> ln(N)
+                generate_wsg(Ntasks, int(sys.argv[3]), NORnodes, 0.5)
+            elif num_args == 6:
+                generate_wsg(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), float(sys.argv[5]))
+            else:
+                generate_wsg(50, 100, 50, 0.5)
         elif sys.argv[1] == "-tb":
             task_to_bipartite()
         elif sys.argv[1] == "-mb":

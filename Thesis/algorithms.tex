@@ -1,0 +1,49 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{Matching Algorithms}
+The matching problem is solved on the static graph at a certain point in time. One goal for the optimization algorithms is to find the maximum edge-disjoint cycle covering, which can be solved as Min-D-DCC is solved \cite{Man1} \cite{Bir}. The section \ref{bima} discusses this polynomial time algorithm.
+
+In the case that the optimal soultion contains long cycles, the matching problem is to find the maximum edge-disjoint covering with cycles of $\leq$ edges. This problem is NP-Hard and APX-Complete \cite{Bir}. This is desirable because
+
+Both graph algorithms and integer linear programming (ILP) algorithms can be used. Some additional features may be easier to add in the ILP case , which is a common, reliable choice in the field despite being NP-complete; however additional constraints such as desiring small cycles make the problem NP-Hard.
+
+\subsection{Matching via Perfect Bipartite Matching}\label{bima}
+
+An algorithm to find perfect weighted matchings in bipartite graph can be used to discover the optimal match in polynomial time \cite{Bir}. The bipartite graph has one side for Offers and one for Requests, thus each (offer=$t_a$, request=$t_b$) pair has two nodes created with edge weight $0$. Next an edge is created between the offfer node and every request node for $t_a$ with weight $> 0$. Then a maximum weight perfect matching algorithm can be used.
+
+The positive weight can be used to assign preferences to some (offer, request) pairs over others, perhaps due to user preferences (soft constraints).
+
+The drawback is that long-cycles are possible, and in the dense graph for kidney exchange, very likely. Each user reserves the right to refuse a suggested match, so longer matches are more likely to be rejected, and in the kidney case, require organizing dozens of simultaneous surgeries. However, bounding the match-size results in an NP-hard problem \cite{Bir}.
+
+\subsection{Matching via Weighted Boolean Optimization}
+
+One linear programming formulation of the problem is for weighted boolean optimization \cite{Mar1}.
+
+The variables:
+\begin{itemize}
+  \item Let $x_{abt}$ denote $u_a$ doing $t_t$ for $u_b$
+  \item Let $r_{at}$ denote a task $u_a$ requests for offered task $t_t$.
+
+        That is, an edge: $(t_t, r_{at})$ : $u_a$
+  \item Let $s_{at}$ be a selection varable indicating whether $u_a$'s request $t_t$ is satisfied
+  \item Let $w_{abt}$ be a weight describing $u_a$'s satisfaction with $u_b$ fulfilling request $t_t$
+\end{itemize}
+
+Denote $U$ the set of users and $T$ the set of tasks
+The constraints for each user $a \in U$ and $t \in T$:
+\begin{enumerate}
+  \item $\sum_{b \in U} x_{abt} \leq 1$
+  \item $sum_{b \in U} x_{abt} = \sum{b \in U} x_{bar_{at}}$
+  \item $s_{at} + \sum_{b \in U} x_{bar_{at}} > 1$
+\end{enumerate}
+
+Minimize:
+  $$\sum_{a \in U, b \in U, t \in T} w_{abt} s_{at}$$
+
+One the positive side, a lot of work has gone into good linear program and SAT solvers despite the problem being NP-complete. Furthermore, additional features are easy to add into the formulation.
+
+A big potential drawback is that there are $|U \times T|$ constraints (all sums over $U$) to be dealt with. Dealing with kidney exchange, \cite{Abr1} found the machines ran out of memory and needed to use a more complex, incremental column generation approach. However, they did formulate the problem differently for LP.
+
+\end{document}
