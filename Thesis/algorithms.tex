@@ -17,6 +17,15 @@ The positive weight can be used to assign preferences to some (offer, request) p
 
 The drawback is that long-cycles are possible, and in the dense graph for kidney exchange, very likely. Each user reserves the right to refuse a suggested match, so longer matches are more likely to be rejected, and in the kidney case, require organizing dozens of simultaneous surgeries. However, bounding the match-size results in an NP-hard problem \cite{Bir}.
 
+\subsubsection{Hanging Offers and Requests}
+When a user rejects a suggested match, an alternative to trashing the match for all users is to take the offer and request of the rejecting user's neighbors and add this to the system as a new (offer, request) pair that will then satisfy them. Via edge-weights, this hanging-OR-pair can be given priority in matching.
+
+This is optimal provided none of the OR-pairs involved need to be processed simultaneously or with time constraints. Reputation systems may be needed to encourage the user with the hanging-offer to not leave.
+
+\subsection{Approximation Algorithm}
+
+The Floyd-Warshall algorithm can be used to find the shortest cycles for each vertex in $\bO(|V|^3)$ time. For $p < 0.85$ this will be close to optimal. Deal with intersecting cycles greedily by choosing the highest $\E[c_k]$. Next run Floyd-Warshall again. Perhaps the path data-structure can be dynamically updated?
+
 \subsection{Matching via Weighted Boolean Optimization}
 
 One linear programming formulation of the problem is for weighted boolean optimization \cite{Mar1}.
@@ -45,5 +54,7 @@ Minimize:
 One the positive side, a lot of work has gone into good linear program and SAT solvers despite the problem being NP-complete. Furthermore, additional features are easy to add into the formulation.
 
 A big potential drawback is that there are $|U \times T|$ constraints (all sums over $U$) to be dealt with. Dealing with kidney exchange, \cite{Abr1} found the machines ran out of memory and needed to use a more complex, incremental column generation approach. However, they did formulate the problem differently for LP.
+
+
 
 \end{document}

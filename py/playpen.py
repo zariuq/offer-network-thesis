@@ -33,13 +33,12 @@ def add_ORnode(node_id, node):
     request = "task" + str(node[1])
     user    = "user" + str(node[2])
     node_name = "OR" + "_".join([offer,request,user,str(node_id)])
-    command = " \n".join(
-        ["CREATE ({0}:ORnode {{id:\'{1}\', offer:\'{2}\', request:\'{3}\', user:\'{4}\'}}) "
-            .format(node_name, node_id, node[0], node[1], node[2])
-        ,"CREATE ({0})-[:Offer]->({1}) ".format(offer, node_name)
+    node_command = "CREATE ({0}:ORnode {{id:\'{1}\', offer:\'{2}\', request:\'{3}\', user:\'{4}\'}}) ".format(node_name, node_id, node[0], node[1], node[2])
+    rel_command = " \n".join(
+        ["CREATE ({0})-[:Offer]->({1}) ".format(offer, node_name)
         ,"CREATE ({0})-[:Request]->({1}) ".format(node_name, request)
         ,"CREATE ({0})-[:Own]->({1}) ".format(user, node_name)])
-    return command
+    return (node_command, rel_command)
 
 def genRandomNodes(num, num_options, num_users):
     candidates = npr.randint(num_options,size=(2,num))
@@ -76,16 +75,20 @@ def generate_wsg(Ntasks, Nusers, NORnodes, p):
 def generate(Ntasks, Nusers, NORnodes, ornodes):
     with driver.session().begin_transaction() as tx:
         print("Creating cypher commands")
-        commands = []
+        node_commands = []
+        rel_commands = []
         for i in range(0, Ntasks):
-            commands.append(add_task(i+1))
+            node_commands.append(add_task(i+1))
         for i in range(0, Nusers):
-            commands.append(add_user(i+1))
+            node_commands.append(add_user(i+1))
         for i in range(0, NORnodes):
-            commands.append(add_ORnode(i+1, ornodes[i]))
-        command = " \n".join(commands)
+            (nc, rc) = add_ORnode(i+1, ornodes[i])
+            node_commands.append(nc)
+            rel_commands.append(rc)
+        node_command = " \n".join(node_commands)
+        rel_command = " \n".join(rel_commands)
         print("Running transaction.")
-        tx.run(command)
+        tx.run(node_command + rel_command)
 
 # Transform task-centric graph into bipartite graph
 # 1) Generate ORnodes for Offer -> () -> Request, and weight-0 link between them
@@ -123,27 +126,29 @@ def task_to_bipartite():
             #print("\n")
 
         print("Adding offers, requests, and zero-edges.")
-        commands = []
+        node_commands = []
+        rel_commands = []
         for offer in offers:
-            commands.append("CREATE (offer{0}_{1}:Offer {{task:\'{0}\', node_id:\'{1}\', user:\'{2}\'}}) "
+            node_commands.append("CREATE (offer{0}_{1}:Offer {{task:\'{0}\', node_id:\'{1}\', user:\'{2}\'}}) "
                                 .format(offer[0],offer[1],offer[2]))
         for request in requests:
-            commands.append("CREATE (request{0}_{1}:Request {{task:\'{0}\', node_id:\'{1}\', user:\'{2}\'}}) "
+            node_commands.append("CREATE (request{0}_{1}:Request {{task:\'{0}\', node_id:\'{1}\', user:\'{2}\'}}) "
                                 .format(request[0],request[1],request[2]))
         for edge in zero_weights:
-            commands.append("CREATE ((offer{0}_{2})-[:bNullEdge {{weight:0}}]->(request{1}_{2})) "
+            rel_commands.append("CREATE ((offer{0}_{2})-[:bNullEdge {{weight:0}}]->(request{1}_{2})) "
                                 .format(edge[0],edge[1],edge[2]))
                                 #,"CREATE ({0})-[:Own]->({1}) ".format(user, node_name)])
         print("Adding real edges.")
         for task in tasks.values():
             for offer, request in itertools.product(task[0], task[1]):
-                commands.append("CREATE ((offer{0})<-[:bEdge {{weight:1}}]-(request{1})) "
+                rel_commands.append("CREATE ((offer{0})<-[:bEdge {{weight:1}}]-(request{1})) "
                                     .format(offer, request))
 
-        command = " \n".join(commands)
+        node_command = " \n".join(node_commands)
+        rel_command = " \n".join(rel_commands)
         print("Running transaction.")
         with session.begin_transaction() as tx:
-            tx.run(command)
+            tx.run(node_command + rel_command)
 
 # Use cython munrkes algorithm to find maximum weight matching
 def bmatch():
