@@ -21,7 +21,7 @@ def add_ORnode(node_id, node):
     rel_command = " \n".join(
         ["MATCH (offer:Task {{id:\'{0}\'}})".format(node[0])
         ,"MATCH (request:Task {{id:\'{0}\'}})".format(node[1])
-        ,"MATCH (user:Task {{id:\'{0}\'}})".format(node[2])
+        ,"MATCH (user:User {{id:\'{0}\'}})".format(node[2])
         ,"CREATE (ornode:ORnode {{id:\'{1}\', offer:\'{2}\', request:\'{3}\', user:\'{4}\'}})   ".format(node_name, node_id, node[0], node[1], node[2])
         ,"CREATE (offer)-[:Offer]->(ornode) "
         ,"CREATE (ornode)-[:Request]->(request) "

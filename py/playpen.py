@@ -38,15 +38,17 @@ def task_to_bipartite():
         result = session.run("match (task:Task)-[]-(node:ORnode)-[]-(:Task) "
                              "return distinct task, node ")
         for record in result:
+            #print("\n".join("%s: %s" % (key, record[key]) for key in record.keys()))
+            #print("\n")
             node = record['node']
             task = record['task']['id']
             tasks.setdefault(task,([],[]))
             if node['offer'] == task:
                 tasks[task][0].append((node['offer'], node['id']))
-            else:
+            elif node['request'] == task:
                 tasks[task][1].append((node['request'], node['id']))
-            #print("\n".join("%s: %s" % (key, record[key]) for key in record.keys()))
-            #print("\n")
+            else:
+                raise ValueError('Offer or Request should match Task.')
 
         print("Adding offers and requests.")
         node_commands = []
@@ -73,8 +75,9 @@ def task_to_bipartite():
                 ,"MATCH (request:Request {{task:\'{0}\', node_id:\'{1}\'}}) ".format(edge[1],edge[2])
                 ,"CREATE ((offer)-[:bNullEdge {weight:0}]->(request)) "]))
         print("Adding zero and real edges.")
-        for task in tasks.values():
+        for task in tasks.values(): # [([offers],[requests])]
             for offer, request in itertools.product(task[0], task[1]):
+                #print("{0} - {1}".format(offer, request))
                 rel_commands.append("\n".join(
                     ["MATCH (offer:Offer {{task:\'{0}\', node_id:\'{1}\'}}) "
                         .format(offer[0],offer[1])
@@ -102,8 +105,6 @@ def bmatch():
             offers[tuple(record['offer'].values())] = num_offers # store the array #
             iOffers[num_offers] = record['offer']
             num_offers += 1
-            if record['offer']['node_id'] == '53':
-                print(record['offer'])
         result = session.run("match (request:Request) return request ")
         num_requests = 0
         print("Getting requests.")
@@ -111,8 +112,6 @@ def bmatch():
             requests[tuple(record['request'].values())] = num_requests
             iRequests[num_requests] = record['request']
             num_requests += 1
-            if record['request']['node_id'] == '53':
-                print(record['request'])
         print("Getting edges.")
         resultEdge = session.run("match (offer:Offer)-[edge:bEdge]-(request:Request) "
                              "return offer, request, edge ")
@@ -120,10 +119,6 @@ def bmatch():
                              "return offer, request, edge ")
         for result in [resultEdge, resultNullEdge]:
             for record in result:
-                if record['request']['node_id'] == '53':
-                    print(record['request'])
-                if record['offer']['node_id'] == '53':
-                    print(record['offer'])
                 edges.append((tuple(record['offer'].values()), tuple(record['request'].values())
                             ,-record['edge']['weight']))
     size = max(num_offers, num_requests)
@@ -161,12 +156,22 @@ def bmatch():
                 tx.run(command)
 
 def getcycles():
+    handled = dict()
+    cycles = []
     with driver.session() as session:
         print("Getting cycles/matches.")
         result = session.run("match p=(o:ORnode)-[:Match*1..]->(o) return tail(nodes(p)) ")
         for record in result:
-            print(record)
-            print("\n")
+            cycle = record.values()[0]
+            if cycle[0]['id'] in handled:
+                continue
+            cycles.append(cycle)
+            for orNode in cycle:
+                handled[orNode['id']] = True
+            #print("\n".join("%s" % (node) for node in record.values()[0]))
+            #print("\n")
+        print("Total %s cycles found." % (len(cycles)))
+        print("\n\n".join(" ".join("%s" % (orNode['id']) for orNode in cycle)for cycle in cycles))
 
 def delete_all():
     with driver.session() as session:
@@ -197,7 +202,7 @@ def delete_bmatch():
 
 def print_instructions():
     print("Error. Use code.")
-    print("-d to delete everything. g for graph, b for bipartite, mb for bipartite match")
+    print("-d to delete everything. g for graph, tb for bipartite, mb for bipartite match")
     print("-ger [Ntasks Nusers NORnodes] to generate an Erdos-Renyi graph, [] denotes optionality")
     print("-gwsg [Ntasks Nusers [k p]] to generate a Watts Strogatz graph")
     print("-gsfg [Ntasks Nusers] to generate a scale free graph")
@@ -214,7 +219,7 @@ if __name__ == "__main__":
             if num_args == 3:
                 if sys.argv[2] == "g":
                     delete_graph()
-                elif sys.argv[2] == "b":
+                elif sys.argv[2] == "tb":
                     delete_bipartite()
                 elif sys.argv[2] == "mb":
                     delete_bmatch()
