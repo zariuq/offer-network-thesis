@@ -17,6 +17,9 @@ The positive weight can be used to assign preferences to some (offer, request) p
 
 The drawback is that long-cycles are possible, and in the dense graph for kidney exchange, very likely. Each user reserves the right to refuse a suggested match, so longer matches are more likely to be rejected, and in the kidney case, require organizing dozens of simultaneous surgeries. However, bounding the match-size results in an NP-hard problem \cite{Bir}.
 
+\subsubsection{Low Acceptance Probability}
+In the case that $p < 0.7$, a simple 2-cycle cover will likely perform best. Perhaps following this up with a maximum cycle cover will be good (if the $(>2)$-cycles haven't been ruined).
+
 \subsubsection{Hanging Offers and Requests}
 When a user rejects a suggested match, an alternative to trashing the match for all users is to take the offer and request of the rejecting user's neighbors and add this to the system as a new (offer, request) pair that will then satisfy them. Via edge-weights, this hanging-OR-pair can be given priority in matching.
 

@@ -41,10 +41,11 @@ Personal Notes:
 First, I'll break the P-time matching! Yargh!
 
 ebay: (-- ONs)
-      skewed degree distribution (few big sellers)
-        -- likely in ONs too, actually, likely almost none (at first)
+      skewed degree distribution (there are a few big sellers)
+        -- not likely in ONs, actually, likely almost none (at first)
       disassortativity (users don't necessarily look for products they sell)
         -- likely as well, although to a lesser degree than in ebay
+            -- so, not much clustering
       densification (reputation)
         -- if the feature is added
       no rich club connectivity

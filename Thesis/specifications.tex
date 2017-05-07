@@ -68,6 +68,21 @@ As can be seen in \ref{best-k}, the optimal cycle size exponentially incresaes f
 
 For human users without very specific task formulations, $p$ likely lies in this range.
 
+\subsubsection{How many matches are needed to for acceptance?}
+Assuming the hanging offers and requests approach is used, how many times should a user expect to wait for a given $p$?
+
+In a given round, the probability the suggested match goes through is $p^3$ as both neighbors in a cycle also need to accept. Thus the expected number of rounds for acceptance follows the geometric distribution: $\sum_{k=0}^{\infty} k P^3 (1 - p^3)^{k-1} = \frac{1}{p^3}$.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{nrounds.png}
+  \caption{(a)-(c) plot expected number of rounds for acceptance of an ORpair for different $p$. (a) is for 2-cyles. (b) and (c) k-cycle. (d)-(e) plot the probability of an ORpair not being accepted in 2 rounds. (d) is k-cycle and (e) is 2-cycle.}
+  \label{nrounds}
+\end{figure}
+
+As one can see in \ref{fig:nrounds}, one expects 5 rounds to be needed by $p = 0.6$. Fortunately, for $p > 0.7$, one expcets less than 3 rounds to be needed. With 2-cycles, one only needs 3 or 4 rounds for $p = 0.6$ or $0.5$. For lower $p$, the offer network will likely be too frustrating for human users: matching will have to be done on more detailed task specifications \footnote{Acceptance probaility is likely proportional to how detailed task specifications are; however, there are also limits as to how detailed humans can be.}.
+
+One can also easily calculate the probability acceptance for an ORpair will take more than two rounds: $1 - (p^3 + p^3 * (1 - p^3))$.
+
 \subsection{Additional Features}
 
 The graph model can be made more sophisticated by drawing $N_tt$ and $N_d$ from a distribution, probabilistically adding new tasks, etc. $p$ could also be drawn from a distribution on a user or edge basis. The parameters can also be made super-constants dependent on the graph size.
