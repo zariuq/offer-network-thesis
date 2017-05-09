@@ -3,20 +3,15 @@
 from neo4j.v1 import GraphDatabase
 import sys
 import numpy as np
-import numpy.random as npr
 import itertools
 import networkx as nx
 from graph_gen import *
 from munkres import munkres
 
-driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "iwin"))
-
-#session = driver.session()
-
 # Transform task-centric graph into bipartite graph
 # 1) Generate ORnodes for Offer -> () -> Request, and weight-0 link between them
 # 2) For each Task, generate weight-1 links for each Offer with each Request
-def task_to_bipartite():
+def task_to_bipartite(driver):
     offers = []
     requests = []
     zero_weights = []
@@ -91,7 +86,7 @@ def task_to_bipartite():
                 tx.run(command)
 
 # Use cython munrkes algorithm to find maximum weight matching
-def bmatch():
+def bmatch(driver):
     offers = dict()
     iOffers = dict()
     requests = dict()
@@ -155,7 +150,7 @@ def bmatch():
             for command in commands:
                 tx.run(command)
 
-def getcycles():
+def getcycles(driver):
     handled = dict()
     cycles = []
     with driver.session() as session:
@@ -171,31 +166,64 @@ def getcycles():
             #print("\n".join("%s" % (node) for node in record.values()[0]))
             #print("\n")
         print("Total %s cycles found." % (len(cycles)))
-        print("\n\n".join(" ".join("%s" % (orNode['id']) for orNode in cycle)for cycle in cycles))
+        print("\n\n".join(" ".join("%s" % (orNode['id']) for orNode in cycle )for cycle in cycles))
+    return cycles
 
-def delete_all():
+def removecycles(driver, p):
+    cycles = getcycles(driver)
+    commands = []
+    for cycle in cycles:
+        num = len(cycle)
+        acceptance = np.random.binomial(1, p, num)
+        match = []
+        newmatch = []
+        rejector = []
+        for i in range(1, num - 1):
+            if all(acceptance[i-1:i+2]):
+                match.append(cycle[i])
+            else:
+                newmatch.append((cycle[i-1], cycle[i+1]))
+                rejector.append(cycle[i])
+        print(acceptance)
+        print("[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in match) + "]")
+        print("[" + ", ".join("\"(%s, %s)\"" % (orNode1['id'], orNode2['id']) for (orNode1, orNode2) in newmatch) + "]")
+
+        l = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in match) + "]"
+        commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} set n.test = 1".format(l))
+        # above for testing purposes; below really deletes
+        #commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} DETACH DELETE n".format(l))
+    #with driver.session() as session:
+    #    with session.begin_transaction() as tx:
+    #        for command in commands:
+    #            tx.run(command)
+
+def delete_all(driver):
     with driver.session() as session:
+        print("Deleting everything.")
         session.run("MATCH (n)"
                     "DETACH DELETE n")
         session.sync()
 
-def delete_graph():
+def delete_graph(driver):
     with driver.session() as session:
+        print("Deleting task-graph.")
         session.run("match (task:Task) "
                     "match (user:User) "
                     "match (ornode:ORnode) "
                     "detach delete task, user, ornode ")
         session.sync()
 
-def delete_bipartite():
+def delete_bipartite(driver):
     with driver.session() as session:
+        print("Deleting bipartite offer-request graph.")
         session.run("match (offer:Offer) "
                     "match (request:Request) "
                     "detach delete offer, request ")
         session.sync()
 
-def delete_bmatch():
+def delete_bmatch(driver):
     with driver.session() as session:
+        print("Deleting matches.")
         session.run("match ()-[match:Match]-()"
                     "detach delete match ")
         session.sync()
@@ -211,20 +239,22 @@ def print_instructions():
     print("-tb to transform task-centric graph into a bipartite graph.")
     print("-mb to get maximum weight matching via bipartite graph.")
     print("-c to get the cycles/matches")
+    print("-r [p] to remove cycles/matches")
 
 if __name__ == "__main__":
     num_args = len(sys.argv)
     if num_args > 1:
+        driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "iwin"))
         if sys.argv[1] == "-d":
             if num_args == 3:
                 if sys.argv[2] == "g":
-                    delete_graph()
+                    delete_graph(driver)
                 elif sys.argv[2] == "tb":
-                    delete_bipartite()
+                    delete_bipartite(driver)
                 elif sys.argv[2] == "mb":
-                    delete_bmatch()
+                    delete_bmatch(driver)
             else:
-                delete_all()
+                delete_all(driver)
         elif sys.argv[1] == "-ger":
             if num_args == 5:
                 generate_er(driver, int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
@@ -255,11 +285,16 @@ if __name__ == "__main__":
             else:
                 generate_plc(driver, 50, 50, 1, 0.3) #default
         elif sys.argv[1] == "-tb":
-            task_to_bipartite()
+            task_to_bipartite(driver)
         elif sys.argv[1] == "-mb":
-            bmatch()
+            bmatch(driver)
         elif sys.argv[1] == "-c":
-            getcycles()
+            getcycles(driver)
+        elif sys.argv[1] == "-r":
+            if num_args == 3:
+                removecycles(driver, float(sys.argv[2]))
+            else:
+                removecycles(driver, 0.7)
         else:
             print_instructions()
     else:

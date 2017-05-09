@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from neo4j.v1 import GraphDatabase
 import sys
 import numpy as np
