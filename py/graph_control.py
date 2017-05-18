@@ -7,6 +7,8 @@ import itertools
 import networkx as nx
 from graph_gen import *
 from munkres import munkres
+from scipy.optimize import linear_sum_assignment
+from ast import literal_eval # "[...]" -> [...]
 
 # Transform task-centric graph into bipartite graph
 # 1) Generate ORnodes for Offer -> () -> Request, and weight-0 link between them
@@ -80,7 +82,7 @@ def task_to_bipartite(driver):
                         .format(request[0],request[1])
                     ,"CREATE ((offer)<-[:bEdge {weight:1}]-(request)) "]))
 
-        print("Running relation transaction")
+        print("Running relation transaction of size: %s" % len(rel_commands))
         with session.begin_transaction() as tx:
             for command in rel_commands:
                 tx.run(command)
@@ -117,12 +119,16 @@ def bmatch(driver):
                 edges.append((tuple(record['offer'].values()), tuple(record['request'].values())
                             ,-record['edge']['weight']))
     size = max(num_offers, num_requests)
-    B = np.full((size, size), np.inf, dtype=np.double)
+    nullSize = np.finfo(float).max # or np.inf depending on solver implementation
+    # munkres in cython doesn't allow non-square matrices
+    # and works with np.inf
+    B = np.full((num_offers, num_requests), nullSize, dtype=np.double)
 
     for edge in edges:
         i = offers[edge[0]]
         j = requests[edge[1]]
         B[i][j] = edge[2]
+    #print(np.argwhere(B != nullSize).T)
 
     #print("%d %d" % (num_offers, num_requests))
     #print(offers)
@@ -131,13 +137,19 @@ def bmatch(driver):
     #for i in range(0,size):
     #    print(B[i])
     print("Matching. Size = {0}".format(size))
-    matching = munkres(B)
+    #matching = munkres(B)
+    row_match, col_match = linear_sum_assignment(B)
+    #print(row_match)
+    #print(col_match)
+    #print(B[row_match, col_match])
+    #print(np.argwhere(matching==True).T)
     print("Generating match graph.")
     with driver.session() as session:
         commands = []
-        for match in np.argwhere(matching==True):
-            offer = iOffers[match[0]]
-            request = iRequests[match[1]]
+        for offer_num, request_num in zip(row_match, col_match):
+        #for offer_num, request_num in np.argwhere(matching==True):
+            offer = iOffers[offer_num]
+            request = iRequests[request_num]
             if offer['node_id'] != request['node_id']:
                 commands.append("MATCH (offer:ORnode)-[]-()-[]-(request:ORnode) "
                                +"WHERE offer.id = \'{0}\' and request.id = \'{1}\' "
@@ -153,7 +165,13 @@ def bmatch(driver):
 def getcycles(driver):
     handled = dict()
     cycles = []
+    total = 0
+    totalPairs = 0
     with driver.session() as session:
+        result = session.run("MATCH (n:ORnode) SET n.wait = n.wait + 1 RETURN count(n) ")
+        for record in result:
+            totalPairs = record['count(n)']
+        #print(result)
         print("Getting cycles/matches.")
         result = session.run("match p=(o:ORnode)-[:Match*1..]->(o) return tail(nodes(p)) ")
         for record in result:
@@ -163,39 +181,62 @@ def getcycles(driver):
             cycles.append(cycle)
             for orNode in cycle:
                 handled[orNode['id']] = True
+            total += len(cycle)
             #print("\n".join("%s" % (node) for node in record.values()[0]))
             #print("\n")
-        print("Total %s cycles found." % (len(cycles)))
-        print("\n\n".join(" ".join("%s" % (orNode['id']) for orNode in cycle )for cycle in cycles))
-    return cycles
+    print("Found %s cycles containing %s of %s pairs." % (len(cycles), total, totalPairs))
+    print("\n\n".join(" ".join("(%s,%s)" % (orNode['id'], orNode['wait']) for orNode in cycle )for cycle in cycles))
+    return (total, totalPairs, cycles)
 
 def removecycles(driver, p):
-    cycles = getcycles(driver)
+    (total, totalPairs, cycles) = getcycles(driver)
     commands = []
     for cycle in cycles:
+
+        ''' ## For hanging-pairs
         num = len(cycle)
         acceptance = np.random.binomial(1, p, num)
         match = []
         newmatch = []
         rejector = []
         for i in range(1, num - 1):
-            if all(acceptance[i-1:i+2]):
-                match.append(cycle[i])
-            else:
+            if not acceptance[i]:
                 newmatch.append((cycle[i-1], cycle[i+1]))
                 rejector.append(cycle[i])
+            elif all(acceptance[i-1:i+2]):
+                match.append(cycle[i])
         print(acceptance)
         print("[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in match) + "]")
         print("[" + ", ".join("\"(%s, %s)\"" % (orNode1['id'], orNode2['id']) for (orNode1, orNode2) in newmatch) + "]")
+        print("[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in rejector) + "]")
 
-        l = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in match) + "]"
-        commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} set n.test = 1".format(l))
+        toProcess = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in match) + "]"
+        commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} set n.test = 1".format(toProcess))
+
+        newnodes = []
+        for (node1, node2) in newmatch:
+            node = (node1['id'] + ', ' + node2['id']
+                   ,(node1['offer']# offer
+                   ,node2['request'] # request
+                   ,node1['user'] + ',' + node2['user'])) #user
+            newnodes.append(add_ORnode(node[0], node[1]))
+            print(node)
+
+        '''
+
+        ## For basic p=1 acceptance
+        toProcess = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in cycle) + "]"
         # above for testing purposes; below really deletes
-        #commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} DETACH DELETE n".format(l))
+        commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} DETACH DELETE n".format(toProcess))
+    with driver.session() as session:
+        with session.begin_transaction() as tx:
+            for command in commands:
+                tx.run(command)
     #with driver.session() as session:
     #    with session.begin_transaction() as tx:
-    #        for command in commands:
+    #        for command in newnodes:
     #            tx.run(command)
+    return (total, totalPairs, cycles)
 
 def delete_all(driver):
     with driver.session() as session:
