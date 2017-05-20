@@ -7,7 +7,7 @@ The matching problem is solved on the static graph at a certain point in time. O
 
 In the case that the optimal soultion contains long cycles, the matching problem is to find the maximum edge-disjoint covering with cycles of $\leq$ edges. This problem is NP-Hard and APX-Complete \cite{Bir}. This is desirable because
 
-Both graph algorithms and integer linear programming (ILP) algorithms can be used. Some additional features may be easier to add in the ILP case , which is a common, reliable choice in the field despite being NP-complete; however additional constraints such as desiring small cycles make the problem NP-Hard.
+Both graph algorithms and integer linear programming (ILP) algorithms can be used. Some additional features may be easier to add in the ILP case , which is a common, reliable choice in the field despite being NP-complete; however additional constraints such as desiring small cycles make the problem NP-Hard. Abraham et al. \cite{Abr1} have used ILP in practice for finding kidney exchanges.
 
 \subsection{Matching via Perfect Bipartite Matching}\label{bima}
 
@@ -30,6 +30,8 @@ This is optimal provided none of the OR-pairs involved need to be processed simu
 The Floyd-Warshall algorithm can be used to find the shortest cycles for each vertex in $\bO(|V|^3)$ time. For $p < 0.85$ this will be close to optimal. Deal with intersecting cycles greedily by choosing the highest $\E[c_k]$. Next run Floyd-Warshall again. Perhaps the path data-structure can be dynamically updated?
 
 \subsection{Matching via Weighted Boolean Optimization}
+Note: this section should perhaps be deleted in favor of simply a description of the work Abraham et al. \cite{Abr1} have done.
+
 
 One linear programming formulation of the problem is for weighted boolean optimization \cite{Mar1}.
 

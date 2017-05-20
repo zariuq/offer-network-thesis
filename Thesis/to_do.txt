@@ -73,3 +73,32 @@ n (int) – The number of nodes
 k (int) – Each node is connected to k nearest neighbors in ring topology
 p (float) – The probability of rewiring each edge
 seed (int, optional) – Seed for random number generator (default=None)
+
+
+
+Okay, what sort of graph can I expect for offer networks?
+
+I'd suspect there are no really big nodes, i.e., with an insane amount of offers. 
+... Actually, that's irrelevant as the matching is done irrespective of the users! 
+The question is task popularity. 
+
+First, yes, some tasks will likely be much more popular than others, both to offer and to request... and those don't have to be the same.... although if there's not some degree of match, then we're kinda fucked, tbh.
+
+So one shouldn't really expect equal probability. What kind of distribution is to be expected though? 
+The ebay data implied tasks weren't really that clustered: people would offer things in one category and request them in another. I suspect this will be less the case with services than things (i.e., selling what you have). However, I guess this would imply task-clustering low but existent.
+
+So scale free kinda makes sense with low (but not no) clustering.
+
+http://expandedramblings.com/index.php/ebay-stats/ --> average of 4 ORpairs per user
+
+
+
+
+
+
+
+
+
+
+
+

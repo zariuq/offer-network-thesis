@@ -16,7 +16,7 @@ def best_k(p):
 #print("ps: {0}".format(ps))
 #print("gs: {0}".format(gs))
 
-def plotECKP(i):
+def plotECKP(i, ks, gs, ps):
     plt.subplot(4, 5, i + 1)
     plt.plot(ks, gs[i])
     #plt.xlabel('k-cycle')
@@ -25,15 +25,15 @@ def plotECKP(i):
 
 def plotECKPfun():
     num = 20
-    ks = range(2, 20, 1)
+    ks = np.linspace(2,50,500, endpoint=True)
     ksr = np.repeat(np.array([ks]).T, num, axis=1)
-    ps = np.around(np.linspace(0.7, 1, num, endpoint=False), decimals=3)
+    ps = np.around(np.linspace(0.85, 1, num, endpoint=False), decimals=3)
     gs = eckp(ksr, ps).T
 
     plt.figure(1)
     #plt.suptitle("Expected number of users satisfied given p and k-cycle")
     for i in range(0, num):
-        plotECKP(i)
+        plotECKP(i, ks, gs, ps)
     plt.show()
 
     '''
@@ -51,35 +51,37 @@ def plotECKPfun():
     pl.show()
     '''
 
-num = 20
-ps1 = np.around(np.linspace(0.3, 0.7, num, endpoint=True), decimals=3)
-ps2 = np.around(np.linspace(0.7, 1, num, endpoint=False), decimals=3)
-ps3 = np.around(np.linspace(0.5, 1, num, endpoint=False), decimals=3)
-cs1 = 1 / np.power(ps1, 3)
-cs2 = 1 / np.power(ps2, 3)
-cs3 = 1 / np.power(ps1, 2)
-ppb = 1 - (np.power(ps2, 3) + (np.power(ps2, 3) * (1 - (np.power(ps2, 3)))))
-ppb2 = 1 - (np.power(ps3, 2) + (np.power(ps3, 2) * (1 - (np.power(ps3, 2)))))
-plt.figure(2)
-#plt.suptitle("Number of Rounds to Acceptance")
-plt.subplot(2,3,1)
-#plt.title("1/p^2")
-plt.xlabel("(a)")
-plt.plot(ps1,cs3)
-plt.subplot(2,3,2)
-#plt.title("1/p^3")
-plt.xlabel("(b)")
-plt.plot(ps1,cs1)
-plt.subplot(2,3,3)
-#plt.title("1/p^3")
-plt.xlabel("(c)")
-plt.plot(ps2,cs2)
-plt.subplot(2,3,4)
-#plt.title("1 - (p^3 + p^3 * (1 - p^3))")
-plt.xlabel("(d)")
-plt.plot(ps2,ppb)
-plt.subplot(2,3,6)
-#plt.title("1 - (p^2 + p^2 * (1 - p^2))")
-plt.xlabel("(e)")
-plt.plot(ps3,ppb2)
-plt.show()
+def plotNRounds():
+    num = 20
+    ps1 = np.around(np.linspace(0.3, 0.7, num, endpoint=True), decimals=3)
+    ps2 = np.around(np.linspace(0.7, 1, num, endpoint=False), decimals=3)
+    ps3 = np.around(np.linspace(0.5, 1, num, endpoint=False), decimals=3)
+    cs1 = 1 / np.power(ps1, 3)
+    cs2 = 1 / np.power(ps2, 3)
+    cs3 = 1 / np.power(ps1, 2)
+    ppb = 1 - (np.power(ps2, 3) + (np.power(ps2, 3) * (1 - (np.power(ps2, 3)))))
+    ppb2 = 1 - (np.power(ps3, 2) + (np.power(ps3, 2) * (1 - (np.power(ps3, 2)))))
+    plt.figure(2)
+    #plt.suptitle("Number of Rounds to Acceptance")
+    plt.subplot(2,3,1)
+    #plt.title("1/p^2")
+    plt.xlabel("(a)")
+    plt.plot(ps1,cs3)
+    plt.subplot(2,3,2)
+    #plt.title("1/p^3")
+    plt.xlabel("(b)")
+    plt.plot(ps1,cs1)
+    plt.subplot(2,3,3)
+    #plt.title("1/p^3")
+    plt.xlabel("(c)")
+    plt.plot(ps2,cs2)
+    plt.subplot(2,3,4)
+    #plt.title("1 - (p^3 + p^3 * (1 - p^3))")
+    plt.xlabel("Acceptance probability p \n (d)")
+    plt.ylabel("Expected rounds to acceptance")
+    plt.plot(ps2,ppb)
+    plt.subplot(2,3,6)
+    #plt.title("1 - (p^2 + p^2 * (1 - p^2))")
+    plt.xlabel("Acceptance probability p \n (e)")
+    plt.plot(ps3,ppb2)
+    plt.show()

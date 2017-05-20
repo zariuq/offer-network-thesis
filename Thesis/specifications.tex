@@ -25,15 +25,20 @@ A matching of users who can satisfy each other is a vertex cycle. See the simple
 
 \subsection{Dynamic Offer Network Specification}
 The dynamic offer network is modeled in terms of discrete timesteps: $s = 0, 1, 2 \dots$.
-Let $N_t, N_d, N_m \in \mathbb{N}$, $p \in [0,1]$ be constants.
+Let $N_t, N_d \in \mathbb{N}$, $p \in [0,1]$ be constants or super-contants dependent on the graph size..
 
 Between each timestep the following events can take place:
 \begin{itemize}
   \item Add $N_t$ new edges to the graph
   \item Remove $N_d$ unsatisfied edges
+  \item Remove all matched and exchanged ORpairs.
 \end{itemize}
 
-In addition every $N_m$ steps, an optimization algorithm is run in batch to suggest exchanges to users. An exchange is accepted if each edge is accepted by its user. Users accept the exchange for an edge with probability $p$. Rejected exchanges are left as is. All edges in accepted exchanges are removed from the graph.
+An exchange is accepted if each edge is accepted by its user. Users accept the exchange for an edge with probability $p$. For simplicity we both assume that acceptance probability is uniform and independent.
+
+Rejected exchanges are left as is. All edges in accepted exchanges are removed from the graph.
+
+The graph model can be made more sophisticated by drawing $N_tt$ and $N_d$ from a distribution, probabilistically adding new tasks, etc. $p$ could also be drawn from a distribution on a user or edge basis.
 
 \subsubsection{Cycle Size and Acceptance Probability}
 
@@ -59,7 +64,7 @@ Thus the expected number of satisfied users is: $\E[c_k] = k p^k$. For a given $
   \label{eckp2}
 \end{figure}
 
-As can be seen in \ref{best-k}, the optimal cycle size exponentially incresaes for $p > 0.95$ ($k \approx 19.5$), so the maximum without cycle-length constraints will likely suffice. And in \ref{eckp1} one sees that $2$-cycles are optimal $p < 0.7$. The Polynomial time solution is less clear for the following cases:
+As can be seen in Figure \ref{best-k}, the optimal cycle size exponentially incresaes for $p > 0.95$ ($k \approx 19.5$), so the maximum without cycle-length constraints will likely suffice. And in Figure \ref{eckp1} one sees that $2$-cycles are optimal $p < 0.7$. The Polynomial time solution is less clear for the following cases:
 \begin{itemize}
   \item $0.7 < p < 0.85$ where $ 2 < k < 10$ is optimal.
   \item $0.85 < p < 0.95$ where $ 10 < k < 30$ is optimal,
@@ -71,7 +76,7 @@ For human users without very specific task formulations, $p$ likely lies in this
 \subsubsection{How many matches are needed to for acceptance?}
 Assuming the hanging offers and requests approach is used, how many times should a user expect to wait for a given $p$?
 
-In a given round, the probability the suggested match goes through is $p^3$ as both neighbors in a cycle also need to accept. Thus the expected number of rounds for acceptance follows the geometric distribution: $\sum_{k=0}^{\infty} k P^3 (1 - p^3)^{k-1} = \frac{1}{p^3}$.
+In a given round, the probability the suggested match goes through is $p^3$ as both neighbors in a cycle also need to accept. Thus the expected number of rounds for acceptance follows the geometric distribution: $\sum_{k=0}^{\infty} k p^3 (1 - p^3)^{k-1} = \frac{1}{p^3}$.
 
 \begin{figure}
   \includegraphics[width=\textwidth]{nrounds.png}
@@ -79,13 +84,11 @@ In a given round, the probability the suggested match goes through is $p^3$ as b
   \label{nrounds}
 \end{figure}
 
-As one can see in \ref{fig:nrounds}, one expects 5 rounds to be needed by $p = 0.6$. Fortunately, for $p > 0.7$, one expcets less than 3 rounds to be needed. With 2-cycles, one only needs 3 or 4 rounds for $p = 0.6$ or $0.5$. For lower $p$, the offer network will likely be too frustrating for human users: matching will have to be done on more detailed task specifications \footnote{Acceptance probaility is likely proportional to how detailed task specifications are; however, there are also limits as to how detailed humans can be.}.
+As one can see in Figure \ref{fig:nrounds}, one expects 5 rounds to be needed by $p = 0.6$. Fortunately, for $p > 0.7$, one expcets less than 3 rounds to be needed. With 2-cycles, one only needs 3 or 4 rounds for $p = 0.6$ or $0.5$. For lower $p$, the offer network will likely be too frustrating for human users: matching will have to be done on more detailed task specifications \footnote{Acceptance probaility is likely proportional to how detailed task specifications are; however, there are also limits as to how detailed humans can be.}.
 
 One can also easily calculate the probability acceptance for an ORpair will take more than two rounds: $1 - (p^3 + p^3 * (1 - p^3))$.
 
 \subsection{Additional Features}
-
-The graph model can be made more sophisticated by drawing $N_tt$ and $N_d$ from a distribution, probabilistically adding new tasks, etc. $p$ could also be drawn from a distribution on a user or edge basis. The parameters can also be made super-constants dependent on the graph size.
 
 Below is a list of potentially desirable features of an offer network that don't qualify for an MVP:
 \begin{itemize}

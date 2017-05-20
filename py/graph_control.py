@@ -10,6 +10,73 @@ from munkres import munkres
 from scipy.optimize import linear_sum_assignment
 from ast import literal_eval # "[...]" -> [...]
 
+# combine task_to_bipartite and bmatch into one to avoid Neo4j transaction time
+def bmatch1(driver):
+    nodes = dict()
+    iNodes = dict()
+    num_nodes = 0
+    with driver.session() as session:
+        #1
+        print("Getting offers and requests.")
+        result = session.run("match (:Task)-[]-(node:ORnode)-[]->(:Task) "
+                             "return distinct node ")
+        for record in result:
+            node = record['node']
+            nodes[tuple(node.values())] = num_nodes;
+            iNodes[num_nodes] = node;
+            num_nodes += 1
+
+        #2
+        print("Getting tasks.")
+        tasks = dict() # {([offers],[requests])}
+        result = session.run("match (task:Task)-[]-(node:ORnode)-[]-(:Task) "
+                             "return distinct task, node ")
+        for record in result:
+            #print("\n".join("%s: %s" % (key, record[key]) for key in record.keys()))
+            #print("\n")
+            node = record['node']
+            task = record['task']['id']
+            tasks.setdefault(task,([],[]))
+            if node['offer'] == task:
+                tasks[task][0].append(nodes[tuple(node.values())])
+            elif node['request'] == task:
+                tasks[task][1].append(nodes[tuple(node.values())])
+            else:
+                raise ValueError('Offer or Request should match Task.')
+
+    #3
+    nullSize = np.finfo(float).max
+    B = np.full((num_nodes, num_nodes), nullSize, dtype=np.double)
+    np.fill_diagonal(B, 1)
+    print("Adding real edges.")
+    for task in tasks.values(): # [([offer_node_nums],[request_node_nums])]
+        for offer, request in itertools.product(task[0], task[1]):
+            B[offer][request] = -1
+
+    #4
+    print("Matching. Size = {0}".format(num_nodes))
+    #row_match, col_match = linear_sum_assignment(B)
+    matching = munkres(B)
+
+    #5
+    print("Generating match graph.")
+    with driver.session() as session:
+        commands = []
+        #for offer_num, request_num in zip(row_match, col_match):
+        for offer_num, request_num in np.argwhere(matching==True):
+            offer = iNodes[offer_num]; request = iNodes[request_num]
+            if offer['id'] != request['id']:
+                commands.append("MATCH (offer:ORnode)-[]-()-[]-(request:ORnode) "
+                               +"WHERE offer.id = \'{0}\' and request.id = \'{1}\' "
+                                    .format(offer['id'], request['id'])
+                               +"WITH offer as offer, request as request LIMIT 1 "
+                               +"CREATE ((offer)-[:Match]->(request)) ")
+        #command = " \n".join(commands)
+        print("Running transaction. There are {0} matches".format(len(commands)))
+        with session.begin_transaction() as tx:
+            for command in commands:
+                tx.run(command)
+
 # Transform task-centric graph into bipartite graph
 # 1) Generate ORnodes for Offer -> () -> Request, and weight-0 link between them
 # 2) For each Task, generate weight-1 links for each Offer with each Request
@@ -55,9 +122,9 @@ def task_to_bipartite(driver):
         for request in requests:
             node_commands.append("CREATE (request{0}_{1}:Request {{task:\'{0}\', node_id:\'{1}\', user:\'{2}\'}}) "
                                 .format(request[0],request[1],request[2]))
-
+        print(">> offers - requests made: %d - %d" % (len(offers), len(requests)))
         node_command = " \n".join(node_commands)
-        print("Running transaction.")
+        print("Running transaction of size %s." % len(node_commands))
         with session.begin_transaction() as tx:
             tx.run(node_command)
         print("Creating Offer and Request indexes")
@@ -130,7 +197,7 @@ def bmatch(driver):
         B[i][j] = edge[2]
     #print(np.argwhere(B != nullSize).T)
 
-    #print("%d %d" % (num_offers, num_requests))
+    print("%d %d" % (num_offers, num_requests))
     #print(offers)
     #print(requests)
     #print(edges)
@@ -138,6 +205,7 @@ def bmatch(driver):
     #    print(B[i])
     print("Matching. Size = {0}".format(size))
     #matching = munkres(B)
+    #for offer_num, request_num in np.argwhere(matching==True):
     row_match, col_match = linear_sum_assignment(B)
     #print(row_match)
     #print(col_match)
@@ -188,9 +256,10 @@ def getcycles(driver):
     print("\n\n".join(" ".join("(%s,%s)" % (orNode['id'], orNode['wait']) for orNode in cycle )for cycle in cycles))
     return (total, totalPairs, cycles)
 
-def removecycles(driver, p):
+def removecycles(driver, p, waitTimes):
     (total, totalPairs, cycles) = getcycles(driver)
     commands = []
+    #waitTimes = dict() # {time:num nodes}
     for cycle in cycles:
 
         ''' ## For hanging-pairs
@@ -224,6 +293,9 @@ def removecycles(driver, p):
 
         '''
 
+        for orNode in cycle:
+            waitTimes[orNode['wait']] = waitTimes.get(orNode['wait'], 0) + 1
+
         ## For basic p=1 acceptance
         toProcess = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in cycle) + "]"
         # above for testing purposes; below really deletes
@@ -236,7 +308,7 @@ def removecycles(driver, p):
     #    with session.begin_transaction() as tx:
     #        for command in newnodes:
     #            tx.run(command)
-    return (total, totalPairs, cycles)
+    return (total, totalPairs, cycles, waitTimes)
 
 def delete_all(driver):
     with driver.session() as session:
@@ -258,9 +330,11 @@ def delete_bipartite(driver):
     with driver.session() as session:
         print("Deleting bipartite offer-request graph.")
         session.run("match (offer:Offer) "
-                    "match (request:Request) "
-                    "detach delete offer, request ")
+                    "detach delete offer ")
+        session.run("match (request:Request) "
+                    "detach delete request ")
         session.sync()
+
 
 def delete_bmatch(driver):
     with driver.session() as session:
@@ -329,13 +403,16 @@ if __name__ == "__main__":
             task_to_bipartite(driver)
         elif sys.argv[1] == "-mb":
             bmatch(driver)
+        elif sys.argv[1] == "-bm":
+            bmatch1(driver)
         elif sys.argv[1] == "-c":
             getcycles(driver)
         elif sys.argv[1] == "-r":
+            waitTimes = dict()
             if num_args == 3:
-                removecycles(driver, float(sys.argv[2]))
+                removecycles(driver, float(sys.argv[2], waitTimes))
             else:
-                removecycles(driver, 0.7)
+                removecycles(driver, 0.7, waitTimes)
         else:
             print_instructions()
     else:
