@@ -11,7 +11,7 @@ Both graph algorithms and integer linear programming (ILP) algorithms can be use
 
 \subsection{Matching via Perfect Bipartite Matching}\label{bima}
 
-An algorithm to find perfect weighted matchings in bipartite graph can be used to discover the optimal match in polynomial time \cite{Bir}. The bipartite graph has one side for Offers and one for Requests, thus each (offer=$t_a$, request=$t_b$) pair has two nodes created with edge weight $0$. Next an edge is created between the offfer node and every request node for $t_a$ with weight $> 0$. Then a maximum weight perfect matching algorithm can be used.
+An algorithm to find perfect weighted matchings in bipartite graph can be used to discover the optimal match in polynomial time \cite{Bir}. The bipartite graph has one side for Offers and one for Requests, thus each (offer=$t_a$, request=$t_b$) pair has two nodes created with edge weight $0$. Next an edge is created between the offer node and every request node for $t_a$ with weight $> 0$. Then a maximum weight perfect matching algorithm can be used.
 
 The positive weight can be used to assign preferences to some (offer, request) pairs over others, perhaps due to user preferences (soft constraints).
 
@@ -21,17 +21,35 @@ The drawback is that long-cycles are possible, and in the dense graph for kidney
 In the case that $p < 0.7$, a simple 2-cycle cover will likely perform best. Perhaps following this up with a maximum cycle cover will be good (if the $(>2)$-cycles haven't been ruined).
 
 \subsubsection{Hanging Offers and Requests}
-When a user rejects a suggested match, an alternative to trashing the match for all users is to take the offer and request of the rejecting user's neighbors and add this to the system as a new (offer, request) pair that will then satisfy them. Via edge-weights, this hanging-OR-pair can be given priority in matching.
+\begin{figure}
+  \includegraphics[width=\textwidth]{hanging_example.png}
+  \caption{1,2,3 are ORnodes and a,b,c,d are task nodes.}
+  \label{hanging_example}
+\end{figure}
 
-This is optimal provided none of the OR-pairs involved need to be processed simultaneously or with time constraints. Reputation systems may be needed to encourage the user with the hanging-offer to not leave.
+In the $0.7 < p < 0.95$ range, long cycles will be rejected with high probability. This makes the \ref{bima} scheme infeasible. The Hanging ORnode approach questions whether this is necessessary.
 
-\subsection{Approximation Algorithm}
+Take the case in Figure \ref{hanging_example}. Assume ORnodes $1,2$ and $3$ are part of a larger cycle. If they all accept the match, then we have evidence for a parity among tasks $a,b,c,d$, and consider ORnode $2$ to be satisfied regardless of the rest of the ORnodes in the cycle.
 
-The Floyd-Warshall algorithm can be used to find the shortest cycles for each vertex in $\bO(|V|^3)$ time. For $p < 0.85$ this will be close to optimal. Deal with intersecting cycles greedily by choosing the highest $\E[c_k]$. Next run Floyd-Warshall again. Perhaps the path data-structure can be dynamically updated?
+Next, again using Figure \ref{hanging_example}, assume $1$ and $3$ accept the match and $2$ rejects. We interpret this situation as: $1$ and $3$ agreed to the parity of the match so all we need is another node like $2$. We get this by adding the converse of $2$ back to the graph, as a combined-user node, with potentially a higher weight in matching.
+
+Algorithmically speaking, the best matches can be found in polynomial time, and with exact $<k$-cycle algorithms or approximation algorithms, the rejection probability is the same even.\footnote{However, certain cycle sizes may be optimal even using the Hanging ORnode approach.}
+
+The first drawback is on the user side: the user for $3$ may be happy to receive $d$ and quit rather than keep offering $c$. A reputation system helps with this. $1$'s user may be dissatisfied offering $a$ now and waiting on request $b$\footnote{Interestingly, if the offer network is used by computer agents performing optimistic execution, this problem diminishes.}. I showed that a node is not expected to be \textit{held} for many rounds; however experiments are needed to see how long users have to wait after beild held.
+
+The bad case is that $2$ was a very rare ORnode and won't be found in steps consitsing of thousands to millions of new ORnodes. In practice, the users will have to be asked to accept this risk; however, this shouldn't add more back-and-forth than a rejected match.
+
+
+\subsection{Approximation Algorithms}
+
+\subsubsection{Greedy Shortest Cycle}\label{sec:gsc}
+A simple heuristic is to pick an arbitrary node, find the shortest cycle\footnote{For example, using Dijkstra's algorithm}, and then mark the nodes as matched. Repeat this process until there are no more cycles.
+
+\subsubsection{Greedy Girth}
+The algorithm is the same as in \ref{sec:gsc} except instead of choosing an arbitrary cycle we choose the girth, the shortest cycle in the graph.
 
 \subsection{Matching via Weighted Boolean Optimization}
 Note: this section should perhaps be deleted in favor of simply a description of the work Abraham et al. \cite{Abr1} have done.
-
 
 One linear programming formulation of the problem is for weighted boolean optimization \cite{Mar1}.
 
@@ -63,3 +81,15 @@ A big potential drawback is that there are $|U \times T|$ constraints (all sums 
 
 
 \end{document}
+
+%%Used to generate Hanging ORnode figure:
+% CREATE (t1:Task {id:'a'})
+% CREATE (t2:Task {id:'b'})
+% CREATE (t3:Task {id:'c'})
+% CREATE (t4:Task {id:'d'})
+% CREATE (o1:ORnode {id:'1', offer:'a', request:'b', user:'1'})
+% CREATE (o2:ORnode {id:'2', offer:'b', request:'c', user:'2'})
+% CREATE (o3:ORnode {id:'3', offer:'c', request:'d', user:'3'})
+% CREATE (t1)-[:Offer]->(o1)-[:Request]->(t2)
+% CREATE (t2)-[:Offer]->(o2)-[:Request]->(t3)
+% CREATE (t3)-[:Offer]->(o3)-[:Request]->(t4)

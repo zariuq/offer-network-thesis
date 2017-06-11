@@ -10,6 +10,62 @@ from munkres import munkres
 from scipy.optimize import linear_sum_assignment
 from ast import literal_eval # "[...]" -> [...]
 
+# Like gscmatch, but only looks for shortest cycles on just added nodes!
+def dynamicMatch(driver, nodeID_and_stepSize):
+    (nodeID, stepSize) = nodeID_and_stepSize
+    justAddedIDs = '[' + ", ".join("\'%s\'" % (id) for id in range(nodeID - stepSize + 1, nodeID + 1)) + ']'
+    print("Running greedy shortest cycle match query on just added ORnodes:")
+    with driver.session() as session:
+        with session.begin_transaction() as tx:
+            command = "MATCH (o:ORnode)-[reqR:Request]->(req:Task), p = shortestPath((req)-[link*]->(o)) WHERE o.id in {0} AND NOT exists(reqR.matched) AND ALL (r IN relationships(p) WHERE NOT exists(r.matched)) FOREACH (r IN link | SET r.matched = TRUE) SET  reqR.matched = TRUE WITH FILTER(ornode IN nodes(p) WHERE ornode:ORnode) AS p UNWIND p as off MATCH (off)<-[]-()<-[]-(req:ORnode) WHERE req IN p AND off.offer = req.request CREATE (off)-[:Match]->(req) ".format(justAddedIDs)
+
+            tx.run(command)
+
+# Simply runs the query transaction!
+# Picks arbitrary node, finds shortest cycle, then rinses and repeats without overlapping
+def gscmatch(driver):
+    print("Running greedy shortest cycle match query:")
+    with driver.session() as session:
+        with session.begin_transaction() as tx:
+            command = "MATCH (o:ORnode)-[reqR:Request]->(req:Task), p = shortestPath((req)-[link*]->(o)) WHERE NOT exists(reqR.matched) AND ALL (r IN relationships(p) WHERE NOT exists(r.matched)) FOREACH (r IN link | SET r.matched = TRUE) SET  reqR.matched = TRUE WITH FILTER(ornode IN nodes(p) WHERE ornode:ORnode) AS p UNWIND p as off MATCH (off)<-[]-()<-[]-(req:ORnode) WHERE req IN p AND off.offer = req.request CREATE (off)-[:Match]->(req) "
+
+            tx.run(command)
+
+# Calculates maximum cardinality (or weight) 2-cycle cover
+# Uses neo4j to find 2-cycles and networkx for matching
+def twomatch(driver):
+    G = nx.Graph()
+    with driver.session() as session:
+        #1
+        print("Getting 2-cycles.")
+        result = session.run("MATCH (o:ORnode)-[]->(:Task)-[]-(o2:ORnode)-[]->(:Task)-[]->(o) "
+                             "RETURN  o,o2 ")
+        for record in result:
+            print("%s %s" % (record['o']['id'],record['o2']['id']))
+            G.add_edge(record['o']['id'],record['o2']['id'])
+
+    #2
+    print("Finding max weight matching.")
+    M = nx.max_weight_matching(G, maxcardinality=False)
+
+    #3
+    print("Creating commands.")
+    commands = []
+    for u, v in M.items():
+        commands.append("MATCH (offer:ORnode)-[]-()-[]-(request:ORnode) "
+                       +"WHERE offer.id = \'{0}\' and request.id = \'{1}\' "
+                            .format(u, v)
+                       +"WITH offer as offer, request as request LIMIT 1 "
+                       +"CREATE ((offer)-[:Match]->(request)) ")
+
+    #4
+    print("Adding matches. There are {0} matches".format(len(commands)))
+    with driver.session() as session:
+        with session.begin_transaction() as tx:
+            for command in commands:
+                tx.run(command)
+
+
 # combine task_to_bipartite and bmatch into one to avoid Neo4j transaction time
 def bmatch1(driver):
     nodes = dict()
@@ -235,8 +291,9 @@ def getcycles(driver):
     cycles = []
     total = 0
     totalPairs = 0
+    # Get # of ORnodes and reset edges so they can be matched again
     with driver.session() as session:
-        result = session.run("MATCH (n:ORnode) SET n.wait = n.wait + 1 RETURN count(n) ")
+        result = session.run("MATCH (:Task)-[off:Offer]->(n:ORnode)-[req:Request]->(:Task) SET n.wait = n.wait + 1 REMOVE off.matched, req.matched RETURN count(n) ")
         for record in result:
             totalPairs = record['count(n)']
         #print(result)
@@ -256,59 +313,160 @@ def getcycles(driver):
     print("\n\n".join(" ".join("(%s,%s)" % (orNode['id'], orNode['wait']) for orNode in cycle )for cycle in cycles))
     return (total, totalPairs, cycles)
 
-def removecycles(driver, p, waitTimes):
-    (total, totalPairs, cycles) = getcycles(driver)
-    commands = []
+# Recursively calculates how long a node was held for
+def calcHeldRounds(h):
+    if len(h) == 0:
+        return 0
+    return 1 + max(calcHeldRounds(h[0]), calcHeldRounds(h[1]))
+
+# Recursively calculates node held most times
+def calcHeldRoundsWaitTime(h, w):
+    if len(h) == 0:
+        return 0
+    return w + h[2] + h[3] + max(calcHeldRoundsWaitTime(h[0], 0), calcHeldRoundsWaitTime(h[1], 0))
+
+
+def removecycles(driver, hold, p, stats, G=None):
+    (_total, totalPairs, cycles) = getcycles(driver)
+    total = 0 # because we only want to count accepted nodes!
+    delCommands = []
+    newNodes = []
+    newUsers = []
     #waitTimes = dict() # {time:num nodes}
+    #holdTimes = dict() # {(hold,wait):num nodes}
     for cycle in cycles:
 
-        ''' ## For hanging-pairs
+        ## For hanging-pairs
         num = len(cycle)
         acceptance = np.random.binomial(1, p, num)
         match = []
         newmatch = []
         rejector = []
-        for i in range(1, num - 1):
-            if not acceptance[i]:
-                newmatch.append((cycle[i-1], cycle[i+1]))
-                rejector.append(cycle[i])
-            elif all(acceptance[i-1:i+2]):
-                match.append(cycle[i])
-        print(acceptance)
-        print("[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in match) + "]")
-        print("[" + ", ".join("\"(%s, %s)\"" % (orNode1['id'], orNode2['id']) for (orNode1, orNode2) in newmatch) + "]")
-        print("[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in rejector) + "]")
 
-        toProcess = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in match) + "]"
-        commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} set n.test = 1".format(toProcess))
+        print("Acceptance: %s" % acceptance)
 
-        newnodes = []
+        # Skip cycle if not all accept
+        if not hold:
+            if all(acceptance):
+                match = cycle
+            else:
+                print("REJECT!")
+                continue
+        else:
+            # First deal with boundary cases
+            first_acceptance = -1
+            for i in range(0, num):
+                if acceptance[i]:
+                    first_acceptance = i
+                    break
+                else:
+                    rejector.append(cycle[i])
+            # And only continue if there is an accetpor
+            if first_acceptance == -1:
+                continue
+            else:
+                last_acceptance = -1
+                for i in reversed(range(0,num)):
+                    if acceptance[i]:
+                        last_acceptance = i
+                        break
+                    else:
+                        rejector.append(cycle[i])
+                # Next reject if only one acceptor
+                if first_acceptance == last_acceptance:
+                    rejector.append(cycle[first_acceptance])
+                    continue
+                else: # Run through cycle to make a list of nearest acceptors
+                    next_accept = list(range(0,num));
+                    next_accept[first_acceptance] = (last_acceptance, first_acceptance)
+                    prev = first_acceptance
+                    for i in range(first_acceptance + 1, last_acceptance + 1):
+                        if acceptance[i]:
+                            next_accept[i] = (prev,i)
+                            next_accept[prev] = (next_accept[prev][0], next_accept[prev][1], i)
+                            prev = i
+                        else:
+                            rejector.append(cycle[i])
+                    next_accept[last_acceptance] = (next_accept[last_acceptance][0], last_acceptance, first_acceptance)
+                    # And collect matches and newmatches
+                    #print(next_accept)
+                    tp = 0; tn = 0;
+                    for i in range(0, num):
+                        t = next_accept[i]
+                        if type(t) is tuple:
+                            if i == 0:
+                                tp = next_accept[num - 1]
+                            else:
+                                tp = next_accept[i - 1]
+                            if i == num - 1:
+                                tn = next_accept[0]
+                            else:
+                                tn = next_accept[i + 1]
+                            if type(tp) is tuple and type(tn) is tuple:
+                                match.append(cycle[t[1]])
+                            elif t[2] - 1 > t[1]:
+                                newmatch.append((cycle[t[1]], cycle[t[2]]))
+                    # The edge case
+                    if first_acceptance != 0 or last_acceptance != num -1:
+                        newmatch.append((cycle[last_acceptance], cycle[first_acceptance]))
+
+
+        print("Matches   : [" + ", ".join("\"%s\"" % (orNode['id']) for orNode in match) + "]")
+        print("NewMatches: [" + ", ".join("\"(\"%s\", \"%s\")\"" % (orNode1['id'], orNode2['id']) for (orNode1, orNode2) in newmatch) + "]")
+        print("Rejectors :[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in rejector) + "]")
+
         for (node1, node2) in newmatch:
             node = (node1['id'] + ', ' + node2['id']
                    ,(node1['offer']# offer
                    ,node2['request'] # request
                    ,node1['user'] + ',' + node2['user'])) #user
-            newnodes.append(add_ORnode(node[0], node[1]))
+            ## I want to keep track of how long each has waited at each step.
+            waitTime = "({0}),({1}),{2},{3}".format(node1['waitTimes'], node2['waitTimes'], node1['wait'], node2['wait'])
+            newNodes.append(add_ORnode(node[0], node[1])
+                            + "SET ornode.waitTimes = \'{0}\' ".format(waitTime))
+            if not G == None:
+                G.add_edge(node[1][0], node[1][1], key = node[0], user = node[1][2])
+            newUsers.append(update_user(user_id=node1['user'] + ',' + node2['user']))
             print(node)
 
-        '''
+        toDelete = (match + list(set(itertools.chain(*zip(*newmatch)))))
+        # Delete from Neo4j
+        toProcess = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in (match + list(set(itertools.chain(*zip(*newmatch)))))) + "]"
+        delCommands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} DETACH DELETE n".format(toProcess))
 
-        for orNode in cycle:
-            waitTimes[orNode['wait']] = waitTimes.get(orNode['wait'], 0) + 1
+        ## Maintain G w/o deleting to not skew scale free graph generation
+        #if not G == None:
+            ## Delete from G (networkX)
+        #    for orNode in match:
+        #        G.remove_edge(str(orNode['offer']), str(orNode['request']), str(orNode['id']))
+        #    for orNode in list(set(itertools.chain(*zip(*newmatch)))):
+        #        G.remove_edge(str(orNode['offer']), str(orNode['request']), str(orNode['id']))
 
+        # Collect stats
+        for orNode in match:
+            stats[0][orNode['wait']] = stats[0].get(orNode['wait'], 0) + 1
+            lhistory = literal_eval('('+orNode['waitTimes']+')')
+            index = (calcHeldRounds(lhistory), calcHeldRoundsWaitTime(lhistory, orNode['wait']))
+            stats[1][index] = stats[1].get(index, 0) + 1
+
+        total += len(match)
         ## For basic p=1 acceptance
-        toProcess = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in cycle) + "]"
+        #toProcess = "[" + ", ".join("\"%s\"" % (orNode['id']) for orNode in cycle) + "]"
         # above for testing purposes; below really deletes
-        commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} DETACH DELETE n".format(toProcess))
+        #commands.append("MATCH (n:ORnode)-[:Match]-() WHERE n.id in {0} DETACH DELETE n".format(toProcess))
     with driver.session() as session:
         with session.begin_transaction() as tx:
-            for command in commands:
+            for command in delCommands:
                 tx.run(command)
-    #with driver.session() as session:
-    #    with session.begin_transaction() as tx:
-    #        for command in newnodes:
-    #            tx.run(command)
-    return (total, totalPairs, cycles, waitTimes)
+    with driver.session() as session:
+        with session.begin_transaction() as tx:
+            for command in newUsers:
+                tx.run(command)
+        with session.begin_transaction() as tx:
+            for command in newNodes:
+                tx.run(command)
+
+    return (total, totalPairs, cycles, stats, G)
 
 def delete_all(driver):
     with driver.session() as session:
@@ -408,11 +566,11 @@ if __name__ == "__main__":
         elif sys.argv[1] == "-c":
             getcycles(driver)
         elif sys.argv[1] == "-r":
-            waitTimes = dict()
+            stats = (dict(), dict())
             if num_args == 3:
-                removecycles(driver, float(sys.argv[2], waitTimes))
+                removecycles(driver, float(sys.argv[2], stats))
             else:
-                removecycles(driver, 0.7, waitTimes)
+                removecycles(driver, 0.8, stats)
         else:
             print_instructions()
     else:

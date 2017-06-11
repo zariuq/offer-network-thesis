@@ -78,13 +78,13 @@ seed (int, optional) – Seed for random number generator (default=None)
 
 Okay, what sort of graph can I expect for offer networks?
 
-I'd suspect there are no really big nodes, i.e., with an insane amount of offers. 
-... Actually, that's irrelevant as the matching is done irrespective of the users! 
-The question is task popularity. 
+I'd suspect there are no really big nodes, i.e., with an insane amount of offers.
+... Actually, that's irrelevant as the matching is done irrespective of the users!
+The question is task popularity.
 
 First, yes, some tasks will likely be much more popular than others, both to offer and to request... and those don't have to be the same.... although if there's not some degree of match, then we're kinda fucked, tbh.
 
-So one shouldn't really expect equal probability. What kind of distribution is to be expected though? 
+So one shouldn't really expect equal probability. What kind of distribution is to be expected though?
 The ebay data implied tasks weren't really that clustered: people would offer things in one category and request them in another. I suspect this will be less the case with services than things (i.e., selling what you have). However, I guess this would imply task-clustering low but existent.
 
 So scale free kinda makes sense with low (but not no) clustering.
@@ -94,11 +94,18 @@ http://expandedramblings.com/index.php/ebay-stats/ --> average of 4 ORpairs per 
 
 
 
+Questions:
+  -- Minimalistic, but sufficient that someone can REPRODUCE my work by reading my paper. So referenced papers' ideas you use will have to be explained sufficiently but not excessively.
+  -- Do I really need the ORnodes? Or just edges?
+    -- One reason is it's easier to represent matches
+  -- Explain what a reputatation sytsem is and how it actually helps... and give references to some such systems, such as feedback in eBay and oDesk.
+  -- Make it really self-contained, explain all terms, etc.
+  -- For additional features, for example, explain what the terms actually mean and give some ideas as to their implementation
+  -- Expand related work section
+    -- including the abraham integre programming bit
+  -- Specification title spelling
+  -- plot size (obvious, but yeah)
+  -- Keep track of hard and easy to match tasks!
 
 
-
-
-
-
-
-
+Task centricity is, in a sense, a difference between yours and other similar investigations

@@ -8,12 +8,16 @@ import itertools
 import networkx as nx
 from ast import literal_eval # "[...]" -> [...]
 from munkres import munkres
+from networkx_graph_gen import scale_free_graphX
 
 def add_task(task_id):
     return "CREATE (task{0}:Task {{id:\'{0}\'}}) ".format(task_id)
 
 def add_user(user_id):
-    return "CREATE (user{0}:User {{id:\'{0}\'}}) ".format(user_id)
+    return "CREATE (:User {{id:\'{0}\'}}) ".format(user_id)
+
+def update_user(user_id):
+        return "MERGE (:User {{id:\'{0}\'}}) ".format(user_id)
 
 def add_ORnode(node_id, node):
     offer   = "task" + str(node[0])
@@ -25,7 +29,7 @@ def add_ORnode(node_id, node):
         ["MATCH (offer:Task {{id:\'{0}\'}})".format(node[0])
         ,"MATCH (request:Task {{id:\'{0}\'}})".format(node[1])
         ,"MATCH (user:User {{id:\'{0}\'}})".format(node[2])
-        ,"CREATE (ornode:ORnode {{id:\'{1}\', offer:\'{2}\', request:\'{3}\', user:\'{4}\', wait:0}})   ".format(node_name, node_id, node[0], node[1], node[2])
+        ,"CREATE (ornode:ORnode {{id:\'{1}\', offer:\'{2}\', request:\'{3}\', user:\'{4}\', wait:0, waitTimes:\'\'}})   ".format(node_name, node_id, node[0], node[1], node[2])
         ,"CREATE (offer)-[:Offer]->(ornode) "
         ,"CREATE (ornode)-[:Request]->(request) "
         ,"CREATE (user)-[:Own]->(ornode) "])
@@ -172,6 +176,15 @@ def generate_tasks_users(driver, taskID, userID, Ntasks, Nusers):
         print("Running transaction:")
         tx.run(node_command)
 
+def generate_users(driver, userID, Nusers):
+    if userID < Nusers:
+        with driver.session().begin_transaction() as tx:
+            print("Creating user cypher commands")
+            user_node_commands = generate_user_commands(userID, Nusers)
+            node_command = " \n".join(user_node_commands)
+            print("Running add-user transaction (%s):" % len(user_node_commands))
+            tx.run(node_command)
+
 def generate_ornodes(driver, nodeID, NnewORnodes, orNodes):
     with driver.session().begin_transaction() as tx:
         print("Creating rel commands")
@@ -191,3 +204,55 @@ def generate(driver, Ntasks, Nusers, NORnodes, orNodes):
     with driver.session().begin_transaction() as tx:
         tx.run("CREATE INDEX ON :ORnode(id)")
     return (Ntasks, Nusers, NORnodes)
+
+###
+# Versions that update and maintain NetworkX graph
+###
+
+# Helper function to iterate over orPairs and apply f to them
+def processEdges(G, f, *p):
+    i = 0
+    for n,nbrdict in G.adjacency_iter():
+        for nbr,dict in nbrdict.items():
+            for keydict in dict.values():
+                f(n,nbrdict,nbr,dict,keydict, i, *p)
+                i+=1
+
+def generate_sfgX(driver, NORnodes, Nusers):
+    G, task_commands, orPair_commands = scale_free_graphX(0, 0, NORnodes, Nusers, alpha=0.3, gamma=0.3, beta=0.4, directed_p=0.25, delta_in=1, delta_out=1)
+    user_commands = generate_user_commands(0, Nusers)
+    print("t: %s; u: %s; o: %s" % (len(task_commands), len(user_commands), len(orPair_commands)))
+    with driver.session().begin_transaction() as tx:
+        print("Running add user/task transaction:")
+        node_commands = " \n".join(task_commands + user_commands)
+        if node_commands != '':
+            tx.run(node_commands)
+    with driver.session().begin_transaction() as tx:
+        print("Running add orPair transaction:")
+        for command in orPair_commands:
+            tx.run(command)
+    with driver.session().begin_transaction() as tx:
+        print("Creating indexes:")
+        #tx.run("CREATE INDEX ON :Task(id) ") # Currently unused
+        #tx.run("CREATE INDEX ON :User(id) ")
+        tx.run("CREATE INDEX ON :ORnode(id) ")
+    with driver.session() as session:
+        result = session.run("MATCH (n:ORnode) RETURN count(n) ")
+        for record in result:
+            totalPairs = record['count(n)']
+        print("Added %s" % totalPairs)
+    return (len(G), Nusers, NORnodes, G)
+
+def update_sfgX(driver, taskID, nodeID, NnewORnodes, Nusers, G):
+    newNodeID = nodeID + NnewORnodes
+    G, task_commands, orPair_commands = scale_free_graphX(taskID, nodeID, newNodeID, Nusers, create_using=G, alpha=0.15,gamma=0.15,beta=0.7,directed_p=0.2,delta_in=1,delta_out=1)
+    with driver.session().begin_transaction() as tx:
+        print("Running update task transaction:")
+        node_commands = " \n".join(task_commands)
+        if node_commands != '':
+            tx.run(node_commands)
+    with driver.session().begin_transaction() as tx:
+        print("Running update orPair transaction:")
+        for command in orPair_commands:
+            tx.run(command)
+    return(taskID + len(task_commands), newNodeID, G)
