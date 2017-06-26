@@ -103,9 +103,22 @@ Questions:
   -- For additional features, for example, explain what the terms actually mean and give some ideas as to their implementation
   -- Expand related work section
     -- including the abraham integre programming bit
+    -- Sec 3: <k-cycle is NP-complete
   -- Specification title spelling
   -- plot size (obvious, but yeah)
   -- Keep track of hard and easy to match tasks!
-
+    -- Are short steps better for all around wait time even if not total matches?
+      -- But then are they better for the easy or the hard to match tasks?
+      -- Do we want to optimize for toatl wait-time minimization or not having some tasks that never get satisfied because of greedy pruning of easy tasks?
+      "An important question is how much the waiting times of hard-to-match pairs will improve as the
+percentage of easy-to-match pairs grows." (Anderson)
+  -- METHODOLOGY SECTION :p
+  -- Find out how many cycles are in the graphs
+  -- If there's a system with regular enough gift influx and your task is popular, giving your offer NOW for priority gift receipt may be worth it. If users regularly give-first and enter a queue, then this dynamic could work even without many bonafide gifts, perhaps also milking chaining benefits and delayed exchange in a sense!
+  -- If there are soft constraints, aka preferences, then there is an ordering on all offered tasks when making a request, thus the TTCC (top trading cycle with chains) algorithm can be used. One cool thing about this is that
+  -- Kek, don't forget run-time
 
 Task centricity is, in a sense, a difference between yours and other similar investigations
+Cool! Make connection with greedy shortest cycle approach and clean generalization to
+
+Leshno (2015) :: mismatched item may be preferable to waiting a long time

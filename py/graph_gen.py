@@ -219,7 +219,7 @@ def processEdges(G, f, *p):
                 i+=1
 
 def generate_sfgX(driver, NORnodes, Nusers):
-    G, task_commands, orPair_commands = scale_free_graphX(0, 0, NORnodes, Nusers, alpha=0.3, gamma=0.3, beta=0.4, directed_p=0.25, delta_in=1, delta_out=1)
+    G, task_commands, orPair_commands = scale_free_graphX(0, 0, NORnodes, Nusers, alpha=0.3, gamma=0.3, beta=0.4, directed_p=0.25, delta_in=0.5, delta_out=0.5)
     user_commands = generate_user_commands(0, Nusers)
     print("t: %s; u: %s; o: %s" % (len(task_commands), len(user_commands), len(orPair_commands)))
     with driver.session().begin_transaction() as tx:
@@ -245,7 +245,7 @@ def generate_sfgX(driver, NORnodes, Nusers):
 
 def update_sfgX(driver, taskID, nodeID, NnewORnodes, Nusers, G):
     newNodeID = nodeID + NnewORnodes
-    G, task_commands, orPair_commands = scale_free_graphX(taskID, nodeID, newNodeID, Nusers, create_using=G, alpha=0.15,gamma=0.15,beta=0.7,directed_p=0.2,delta_in=1,delta_out=1)
+    G, task_commands, orPair_commands = scale_free_graphX(taskID, nodeID, newNodeID, Nusers, create_using=G, alpha=0.15,gamma=0.15,beta=0.7,directed_p=0.2,delta_in=0.75,delta_out=0.75)
     with driver.session().begin_transaction() as tx:
         print("Running update task transaction:")
         node_commands = " \n".join(task_commands)

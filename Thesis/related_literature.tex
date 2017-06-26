@@ -1,0 +1,54 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{Related Work}
+Apart from the work at the Global Brain Institute, the most extensive collection of work deals with kidney exchanges. Next there are articles and theses in various fields studying barter exchange networks.
+
+\subsection{Kidney Exchange}
+There has been extensive research for kidney exchanges by computer scientists \cite{Bir}\cite{Abr1}, econmists \cite{Rot1}\cite{Rot2}, and doctors \cite{Seg1}. Kidneys are illegal to buy and sell with the exception of Iran \cite{Rot3}. At least a third of patients with \textit{willing} donors cannot get a transplant because of blood type incompatibility or positive crossmatch \cite{Seg1} \footnote{A crossmtach test involves mixing cells and serum to detremine if the patient will reject the donor's kidney.}. Thus starting in the early 21st century, incompatible donors and kidneys have been paired up and entered into national kidney exchanges.
+
+In the offer network terminology, there are four task types: A, B, AB, O, and each user enters an ORpair: (donor type, patient type). Due to the limited number of types, Roth, Sonmez, and Unver \cite{Rot2} show that the maximal matching can be obtained with only up to 4-way exchanges \footnote{With the exception of tissue type incompatibilities / positve crossmatches.} \footnote{Using a general result that the size of matching needed is bounded by the number of types being exchanged.} in a thick market; moreover, the only benefit to 4-way exchanges are bounded by the number of rare (O, AB) ORpairs. This is good, as one distinguishing feature of kidney exchanges compared to general offer networks, other than having only four task types, is that an exchange of size $k$ requires $2k$ simultaneous surgeries. Chains can be done sequentially, passing along a donation, to enable 51+ transplants \cite{art:uab}. Another distinguishing feature of kidney exchange: finding the optimal solution is very important as every patient fewer is a potential death. With four task types and tens of thousands of users, the graphs are very dense.
+
+Roth \cite{Rot2} uses patient distributions from U.S. Organ Procurement and Transplantation Network (OPTN) and the Scientific Registry of Transplant Recipients (SRTR) data to randomly generate populations of size 25, 50, and 100. Roth finds, in agreement with the theoretical results, that 4-way (or unbounded) exchanges do not provide much advantage over 2\&3-way exchanges.
+
+Prior to this Roth, Somnez, and Unver investigated TTCC (Top Trading Cycle with Chains), an extension of Galel and Shapley's TTC (Top Trading Cycle) algorithm for housing exchange, for kidney exchange \cite{Rot1}. In TTC, each (donor, patient) pair has a list of most compatible kidneys, and points to the top of the list. Cycles are found, matched, and the ORpairs removed; then the poitners for remaining ORpairs are readjusted. These steps are repeated until there are no more cycles. In TTCC a cadaver queue is used to enhance the exchange: a donor who donates a kidney to the waitlist gets a priority position in the queue. This allows chain formation ending in an ORpair willing to accept a good queue position, which is still a lottery. The chain-selection rule of starting with the highest priority pair and keeping the chain (in case it grows in later rounds) results in a pareto optimal and strategy proof matching \footnote{That is, no other matching is strictly better for an ORpair without being worse for another, and lying about preferences does not confer any advantage.}. Roth experimented with simulations of population size 30, 100, and 300, finding TTCC does help. However, the longest cycles were of length 26, and chains of length 15.
+
+Bir\'{o}, Manlove, and Rizzi in \textit{Maximum Weight Cycle Packing in Directed Graphs,
+with Application to Kidney Exchange Programs} \cite{Bir} study the kidney exchange problem from a computer science perspective. Formally, the problem is to compute a \textbf{cycle packing of maximum size or weight}. The problem of finding the maximum with only 2\&3-cycles is APX-complete \footnote{And thus NP-complete.}. This result also applies to (<k)-cycles for $k > 2$, cycles of any bounded length, and to maximum cycle packings based on cycle weight. The case of 2-cycles and maximum cycle packings based on edge-weight alone have polynomial time solutions. Bir\'{o} describe, but don't use, a $(k - 1 + \epsilon)$-approximation algorithm using augmenting path search, and an exact algorithm that runs in $\bO^*(2^s)$ \footnote{Parametrized complexity: $\bO^*(2^s) = \bO(2^sf(n))$ where $f(n)$ is a polynomial in the input size, $n$.} where $s < |edges|/2$ is the size of a set, $S$ that covers at least one edge from each 3-cycle in the graph. The algorithm uses maximum matching on a graph constructed using subsets of $S$, thus the exponential.
+
+Bir\'{o} use their exact algorithm to exchange kidneys with NHS Blood and Transplant (NHSBT) in the UK. The ($\leq 3$)-exchanges performed twice as well as the 2-exchanges, and $0.79$ that of the unbounded exchanges. In practice, NHSBT chose to use the $\leq 3$-exchanges as a reference while choosing a slightly smaller exchange with more 2-exchanges to diminish complications and the chance of the kidney exchange not happening for some reason.
+
+Abraham, Blum, and Sandholm \cite{Abr1} develop an algorithm based on integer linear programming (ILP) that is used by the \textit{Alliance for Paired Donations}, a leading kidney exchange in the US. Non-incremental ILP methods can easily have billions of constraints and run out of memory. Thus Abraham use incremental problem formulation methosd: constraint generation and column generation. Abraham finds column generation with a cycle-based ILP formulation to provide optimal exchanges fast enough for use with over 10,000 patients. A further advantage of ILP is that additional features are easy to add as constraints.
+
+\subsubsection{Other}
+
+In \textit{A Dynamic Model of Barter Exchange}, Anderson, Ashlagi, Gamarnik, and Kanoria \cite{And1} investigate when exchanges should be performed in an offer network \footnote{barter exchange} with 2-way, 2\&3-way, and chain based matching. A \textbf{chain} is a match started by a gift, which Anderson calls the \textbf{head}. The chain ends when a user whose ORpair receives a gift has no-one to pass the gift on to; this user then becomes the \textbf{bridge} to initiate a chain in a new timestep. An Erdos-Renyi graph model is used with probaiblity $p$ of an edge between any two nodes. Unlike in this thesis, each user has a unique task, so a task is removed once it is matched.
+
+The experiments use a simulation with 16,000 arriving nodes, $p \in [0.04, 0.1]$, and for batche sizes $2^m$ for $m \in [0,6]$. Anderson finds experimentally and theoretically  that greedy matching is optimal, i.e., match cycles/chains as soon as they are found.
+
+The average waiting times are:
+\begin{center}
+  \begin{tabular}{| l | l |}
+    \hline
+    2-way    & $\ln(2)/p^2 + o(1/p^2)$ \\
+    2\&3-way & $\bO(1/p^{3/2})$ \\
+    chains   & $\bO(1/p)$ \\
+    \hline
+  \end{tabular}
+\end{center}
+
+In \textit{On Efficient Recommendations for Online Exchange Markets}, Abbassi and Lakshamanan  perform experiments similar to those in this thesis. Abbassi uses a model where each user has an \textbf{item list} and a \textbf{wish list} and the system tries to recommend the maximum exchange, assuming the user is willing to ecxhange any wish list item for any possessed item \footnote{The graph model Abbassi uses allows for more more specific exchange preferences, making the model essentially the same as the one in this thesis.} A probabilistic model that can model user/item preferences or reputation is also analyzed, but not experimented with. The model is scale free with respect to item popularity, with slight deviation in wish list and item list popularity. Three algorithms are experimented with:
+
+\begin{itemize}
+  \item Maximal: find a greedy edge-disjoint cycle cover $M$ times, and use the one with maximum weight.
+  \item Greedy: Greedily add cycle with largest expected weight.
+  \item Local Search: For each cycle, check if adding it (possibly displacing some cycles) increases the cover weight.
+\end{itemize}
+
+Performance is measured in \textbf{coverage}, how many items are exchanged. Maximal performs almost as well as the slower algorithms\footnote{Let $V$ be the vertices, $E$ edges, and $\mathcal{B}$ the cycle cover. Then Maximal runs in $\bO((|V| + |E|)|\mathcal{B}|)$ and Greedy  in $\bO(|V|^{2k})$.}, and Abbassi finsd Maximal's performance increases significantly until $M \approx 100$.
+
+Cabinallas \cite{Cab0} \cite{Cab1} has done a lot of theoretical work on peer-to-peer bartering in papers and his PhD thesis. Cabinallas compares 2-way, 2\&3-way, and optimal \footnote{via Munkres algorithm} exchanges. Cabinallas' primary focus is on distributed bartering via selfish agents without global knowledge. The main use-case explored is distributed barter based directory services for use with DNS, community-based replication, or other content distribution networks.
+
+
+\end{document}
