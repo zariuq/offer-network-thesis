@@ -2,6 +2,9 @@
 
 \begin{document}
 
+\section{Scope of thesis and Contributions}
+
+
 \section{Offer Network Specifciation}
 
 \begin{figure}
@@ -19,7 +22,7 @@
 
 An \textbf{offer network} instance can be formally modeled as a directed graph, $G$, where vertices $t \in T$ represent tasks, $u \in U$ users, and labeled directed edges $(t_a,t_b) : u_1$\footnote{Can be a hypergraph if one wants user nodes rather than labels.}\footnote{In the current implementation, actually a multigraph: there can be multiple edges ($t_a,t_b$).} represent an offer by user $u_1$ to do task $t_a$ in exchange requested task $t_b$. See Figure \ref{example1}. Due to implemention details in Neo4j\footnote{\url{https://neo4j.com/}}, I create (offer, request) nodes for labeled directed edges, which I call \textbf{ORpairs}. I will call this the task-centric graph formulation.
 
-A matching of users who can satisfy each other is a vertex cycle. See the simplest case below in Figure \ref{example2}. However, there is no guarantee users will be satisfied with the proposed match. I make the simplifying assumption that there is a global match acceptance probability $p$, that is, it is uniform and independent.
+A matching of users who can satisfy each other is a vertex cycle. See the simplest case below in Figure \ref{example2}. However, there is no guarantee users will be satisfied with the proposed match. I make the simplifying assumption that there is a global match acceptance probability $p$, that is, it is uniform and independent\footnote{Moreover, Dickerson \cite{Dick} notes this assumption can also protect users, such as badly sick patients, from being marginalized.}.
 
 \subsection{Task and ORnode Distribution of Graph}
 The more realistic the underlying graph model, the better the experiments will be. However, there is no guarantee the distribution of goods and services in an offer network will resemble those on eBay, social networks, the internet, or regular markets.
@@ -51,6 +54,8 @@ It is possible to make $n^o$ and $n^u$ depend on $N^o_t$, $N^u_t$, on each other
 The optimal solution clearly depends on acceptance probability, primarily biased by the optimal cycle size. In general, finding a maximum edge-disjoint cycle cover with cycle-weights (to account for acceptance probability) is NP-hard \cite{Bir}, so the prefrred algorithm may depend on the current estimation for $p$. If near $1$, (near) unlimited cycle sizes are welcome; if low, 2-exchanges will always be preferable.  In the middle, an algorithm may want to choose cycles with greatest expected value.
 
 Below I include some basic probabilistic anlaysis to find out how high is high and how low is low.
+
+Similar analysis is done by Dickerson \cite{Dick} \cite{Dick3}; however, Dickerson uses an optimal solver and pays less attention to determining heuristics.
 
 \subsubsection{Analysis}
 
@@ -103,7 +108,9 @@ One can also easily calculate the probability acceptance for an ORpair will take
 \subsubsection{Application to Kidney Exchange}
 When exchanging kidneys there is a type of incompatibility not checked prior to initial matching: PRA (percent reactive antibody). Roth et al. \cite{Rot2} split the distribution into low, medium, and high PRA with respective 5, 45, and 90 percent probability of positive crossmatch (rejection). The frequency among kidney donors is 70, 20, and 10 percent. Thus for 10 percent of matches, anything but 2-way has very low expectation, and for another 20 percent, 2-way is still expected to perform twice as well as 4-way matches. For the remaining 70 percent, however, 20-way matches are best, and 50-way still preferable to anything less than 10-way matches.
 
-Thus when mixing low, medium, and high PRA the result of 2-way and 3-way matches being almost as good as unconstrained is unsurprising. This also seems to be a result of there only being 4 blood types, allowing specific upper bounds to be calculated \cite{Rot2}.
+Thus when mixing low, medium, and high PRA the result of 2-way and 3-way matches being almost as good as unconstrained is unsurprising. This also seems to be a result of there only being 4 blood types, and thus no benefit to $(>4)$-way matches \cite{Rot2}.
+
+Morevore, Dickerson \cite{Dick} \cite{Dick3} calculates acceptance probabiltiy\footnote{Optimistically based on only positive crossmatch.} to be at most $30$ percent: that is, 2-way matches always preferable to 3-way.
 
 \subsection{Additional Features}
 

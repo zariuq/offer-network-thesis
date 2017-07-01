@@ -48,37 +48,6 @@ A simple heuristic is to pick an arbitrary node, find the shortest cycle\footnot
 \subsubsection{Greedy Girth}
 The algorithm is the same as in \ref{sec:gsc} except instead of choosing an arbitrary cycle we choose the girth, the shortest cycle in the graph.
 
-\subsection{Matching via Weighted Boolean Optimization}
-Note: this section should perhaps be deleted in favor of simply a description of the work Abraham et al. \cite{Abr1} have done.
-
-One linear programming formulation of the problem is for weighted boolean optimization \cite{Mar1}.
-
-The variables:
-\begin{itemize}
-  \item Let $x_{abt}$ denote $u_a$ doing $t_t$ for $u_b$
-  \item Let $r_{at}$ denote a task $u_a$ requests for offered task $t_t$.
-
-        That is, an edge: $(t_t, r_{at})$ : $u_a$
-  \item Let $s_{at}$ be a selection varable indicating whether $u_a$'s request $t_t$ is satisfied
-  \item Let $w_{abt}$ be a weight describing $u_a$'s satisfaction with $u_b$ fulfilling request $t_t$
-\end{itemize}
-
-Denote $U$ the set of users and $T$ the set of tasks
-The constraints for each user $a \in U$ and $t \in T$:
-\begin{enumerate}
-  \item $\sum_{b \in U} x_{abt} \leq 1$
-  \item $sum_{b \in U} x_{abt} = \sum{b \in U} x_{bar_{at}}$
-  \item $s_{at} + \sum_{b \in U} x_{bar_{at}} > 1$
-\end{enumerate}
-
-Minimize:
-  $$\sum_{a \in U, b \in U, t \in T} w_{abt} s_{at}$$
-
-One the positive side, a lot of work has gone into good linear program and SAT solvers despite the problem being NP-complete. Furthermore, additional features are easy to add into the formulation.
-
-A big potential drawback is that there are $|U \times T|$ constraints (all sums over $U$) to be dealt with. Dealing with kidney exchange, \cite{Abr1} found the machines ran out of memory and needed to use a more complex, incremental column generation approach. However, they did formulate the problem differently for LP.
-
-
 
 \end{document}
 
@@ -93,3 +62,33 @@ A big potential drawback is that there are $|U \times T|$ constraints (all sums 
 % CREATE (t1)-[:Offer]->(o1)-[:Request]->(t2)
 % CREATE (t2)-[:Offer]->(o2)-[:Request]->(t3)
 % CREATE (t3)-[:Offer]->(o3)-[:Request]->(t4)
+
+
+% \subsection{Matching via Weighted Boolean Optimization}
+% Note: this section should perhaps be deleted in favor of simply a description of the work Abraham et al. \cite{Abr1} have done.
+%
+% One linear programming formulation of the problem is for weighted boolean optimization \cite{Mar1}.
+%
+% The variables:
+% \begin{itemize}
+  % \item Let $x_{abt}$ denote $u_a$ doing $t_t$ for $u_b$
+  % \item Let $r_{at}$ denote a task $u_a$ requests for offered task $t_t$.
+%
+        % That is, an edge: $(t_t, r_{at})$ : $u_a$
+  % \item Let $s_{at}$ be a selection varable indicating whether $u_a$'s request $t_t$ is satisfied
+  % \item Let $w_{abt}$ be a weight describing $u_a$'s satisfaction with $u_b$ fulfilling request $t_t$
+% \end{itemize}
+%
+% Denote $U$ the set of users and $T$ the set of tasks
+% The constraints for each user $a \in U$ and $t \in T$:
+% \begin{enumerate}
+  % \item $\sum_{b \in U} x_{abt} \leq 1$
+  % \item $sum_{b \in U} x_{abt} = \sum{b \in U} x_{bar_{at}}$
+  % \item $s_{at} + \sum_{b \in U} x_{bar_{at}} > 1$
+% \end{enumerate}
+%
+% Minimize:
+  % $$\sum_{a \in U, b \in U, t \in T} w_{abt} s_{at}$$
+%
+% One the positive side, a lot of work has gone into good linear program and SAT solvers despite the problem being NP-complete. Furthermore, additional features are easy to add into the formulation.
+%
