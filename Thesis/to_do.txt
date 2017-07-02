@@ -96,29 +96,43 @@ http://expandedramblings.com/index.php/ebay-stats/ --> average of 4 ORpairs per 
 
 Questions:
   -- Minimalistic, but sufficient that someone can REPRODUCE my work by reading my paper. So referenced papers' ideas you use will have to be explained sufficiently but not excessively.
+
+  
   -- Explain what a reputatation sytsem is and how it actually helps... and give references to some such systems, such as feedback in eBay and oDesk.
-  -- Specification title spelling
+
+
   -- plot size (obvious, but yeah)
+
+
   -- Keep track of hard and easy to match tasks!
     -- Are short steps better for all around wait time even if not total matches?
       -- But then are they better for the easy or the hard to match tasks?
       -- Do we want to optimize for toatl wait-time minimization or not having some tasks that never get satisfied because of greedy pruning of easy tasks?
       "An important question is how much the waiting times of hard-to-match pairs will improve as the
 percentage of easy-to-match pairs grows." (Anderson)
+
+
   -- METHODOLOGY SECTION :p
+
+
   -- Find out how many cycles are in the graphs
+
+
   -- If there's a system with regular enough gift influx and your task is popular, giving your offer NOW for priority gift receipt may be worth it. If users regularly give-first and enter a queue, then this dynamic could work even without many bonafide gifts, perhaps also milking chaining benefits and delayed exchange in a sense!
+
   -- Kek, don't forget run-time
+
+
   -- In our experience with UNOS, the number of altruists is typically around 5% the size of the candidate pool
+
+
   -- Amazingly, most planned matches fail to go
 to transplant! In the case of the UNOS exchange, roughly 90% of matches fail [131], and most
 matches fail at other kidney exchanges as well [e.g., 22, 48, 143].
     We use this value for our
 first set of simulations, setting the probability of a crossmatch failing to be a constant 70%. This
 70% expected failure is optimistic (i.e., too low) in that it ignores the myriad other reasons for
-match failures. 
+match failures.
 
-Task centricity is, in a sense, a difference between yours and other similar investigations
-Cool! Make connection with greedy shortest cycle approach and clean generalization to
 
 Leshno (2015) :: mismatched item may be preferable to waiting a long time

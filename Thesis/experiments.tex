@@ -7,10 +7,10 @@ Prior to running grid searches over parametre space, I am informally testing dif
 
 First, when the scale free graph is generated based on in and out degree independently, there are few matches.
 
-Nodes do not seem to be held more than 1 time much, and more than 2 fairly rarely (say when adding 1000 ORnodes at 15 node steps).
+Nodes do not seem to be held more than 1 time much, and more than 2 fairly rarely (say when adding 1000 ORpairs at 15 node steps).
 
-When $p=1$, the matching algorithm performs better when run less frequently (i.e. larger step sizes); whereas when the step size is shorter and $p > 0.8$, the hanging ORnodes approach matches almost as many satisfactorily.
+When $p=1$, the matching algorithm performs better when run less frequently (i.e. larger step sizes); whereas when the step size is shorter and $p > 0.8$, the hanging ORpairs approach matches almost as many satisfactorily.
 
-The greedy shortest cycle algorithm performs almost as well as the optimal algorithm. Moreover, the optimal algorithm without hanging ORnodes performs quite poorly with $p < 0.9$. On the other hand, the greedy shortest cycle algorithm's performance is not hurt much with short enough steps.
+The greedy shortest cycle algorithm performs almost as well as the optimal algorithm. Moreover, the optimal algorithm without hanging ORpairs performs quite poorly with $p < 0.9$. On the other hand, the greedy shortest cycle algorithm's performance is not hurt much with short enough steps.
 
 \end{document}

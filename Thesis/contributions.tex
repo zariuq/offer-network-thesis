@@ -1,0 +1,29 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{State of Offer Network Research}
+Most work in the offer network field myopically focuses on kidney exchange. While there are general benefits to the research, there are also limitations:
+\begin{itemize}
+  \item There are only 4 types of items (kidneys).
+  \item There is mainly interest in optimal solutions. Ironically, a moderately more accuarte model can lead to more matches than optimal solutions. This can be seen looking at the gains from accounting for acceptance probability \cite{Dick} \cite{Dick3} and the performance of near-optimal approximation algorithms \cite{Jia1}.
+  \item Primarily Erdos-Renyi graphs are analysed, both due to similarity to kidney exchange graphs\footnote{Kidney type distribution is not uniform, and some dicrepencies between theory and experiment have been observed \cite{Dick}.} and for analytical simplicity.
+  \item Domain-specific techniques are used to gain performance with ILP\footnote{Integer Linear Programming} approaches \cite{Dick} \cite{Dick1} \cite{Dick2} \cite{Glo1} \cite{And3} \footnote{In practice, an offer network should provide an API for specialized matching agents.}.
+\end{itemize}
+
+Cabinallas' work \cite{Cab0} shows some promise for decentralized offer networks, but uses a uniform model as in the kidney cases, and spends more time discussing models than testing their generic feasibility.
+
+Abbassi \cite{Abb1} \cite{Abb2} use a scale-free graph\footnote{item distribution} (and get data verifying this model) and initially test Maximal (greedy cycle cover) with two algorithms with known approximation bounds. Next they compare synchronous barter to a credit-based system, with dismal results. While acceptance probabiltiy is mentioned, no experiments are done; nor is marginalization of users handling unpopular tasks dealt with in the scale-free model.
+
+\section{Contributions}
+First this thesis replicates Abbassi's experiments \cite{Abb1} with a theoretically motivated variant of Maximal, GSC (Greedy Shortest Cycle), in a graph model with a scale-free item distribution, and compare it to the maximum weight\footnote{cardinality if weigths are uniform} cycle cover, and a 2-cycle cover.
+
+Next this thesis tests the importance of matching frequency in a dynamic offer network setting, similar to Anderson's work with Erdos-Renyi graphs \cite{And1}. Also included is a dynamic matching method that tries to match only new ORpairs every 1-3 added.
+
+Uniform acceptance probabilities $p$ are tested and investigated analytically: the chosen heuristic depends on the range of $p$. Normally a long cycle with one rejecting edge has to be rejected, which is why short cycles are generally sought. A heuristic to salvage such a cycle's feasibility is tested.
+
+In the ReadItSwapIt data from Abbassi \cite{Abb2} $90\%$ of items were only requested by 1 user. Thus settings that marginalize such users least are investigated\footnote{Graph analytics are necessary as an item requested but not offered cannot be matched.}.
+
+If time allows, the impact of a few gifts and their chains will be investigated. Kidney exchanges increasingly rely on chains \cite{Dick}, and Anderson's theoretical analysis \cite{And1} implies the advantage of chains over exchanges only may be comparable to that found by Abbassi for credit mechanisms \cite{Abb2}.
+
+\end{document}

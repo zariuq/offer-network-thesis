@@ -145,11 +145,13 @@ def scale_free_graphX(taskID, nodeID, NORnodes, Nusers,
 
 
     users = npr.randint(1, Nusers, size=(NORnodes - nodeID)) # Is it really cheaper to generate at once?
+    delta = (delta_in + delta_out) / 2
     # seed random number generated (uses None as default)
     random.seed(seed)
     z = {'in':0,'out':0,'mix':0}
     while nodeID < NORnodes:
         r = random.random()
+        rd = random.random()
         # random choice in alpha,beta,gamma ranges
         if r<alpha:
             z['in'] += 1
@@ -157,15 +159,15 @@ def scale_free_graphX(taskID, nodeID, NORnodes, Nusers,
             # add new node v
             taskID += 1; v = taskID; task_commands.append(add_task(taskID));
             # choose w according to in-degree and delta_in
-            if r < directed_p:
+            if rd < directed_p:
                 w = _choose_node(G, G.in_degree(),delta_in)
             else:
-                w = _choose_node(G, G.degree(),delta_in)
+                w = _choose_node(G, G.degree(),delta)
         elif r < alpha+beta:
             z['mix'] += 1
             # beta
             # choose v according to out-degree and delta_out
-            if r < directed_p:
+            if rd < directed_p:
                 while True:
                     v = _choose_node(G, G.out_degree(),delta_out)
                     # choose w according to in-degree and delta_in
@@ -174,19 +176,19 @@ def scale_free_graphX(taskID, nodeID, NORnodes, Nusers,
                         break
             else:
                 while True:
-                    v = _choose_node(G, G.degree(),delta_out)
+                    v = _choose_node(G, G.degree(),delta)
                     # choose w according to in-degree and delta_in
-                    w = _choose_node(G, G.degree(),delta_in)
+                    w = _choose_node(G, G.degree(),delta)
                     if not v == w:
                         break
         else:
             z['out'] += 1
             # gamma
             # choose v according to out-degree and delta_out
-            if r < directed_p:
+            if rd < directed_p:
                 v = _choose_node(G, G.out_degree(),delta_out)
             else:
-                v = _choose_node(G, G.degree(),delta_out)
+                v = _choose_node(G, G.degree(),delta)
             # add new node w
             taskID += 1; w = taskID; task_commands.append(add_task(taskID));
         userID = users[NORnodes - nodeID - 1]
