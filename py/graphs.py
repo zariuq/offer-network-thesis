@@ -19,15 +19,15 @@ def best_k(p):
 def plotECKP(i, ks, gs, ps):
     plt.subplot(4, 5, i + 1)
     plt.plot(ks, gs[i])
-    #plt.xlabel('k-cycle')
+    plt.xlabel('k')
     #plt.ylabel('#')
     plt.title('p = {0}'.format(ps[i]))
 
-def plotECKPfun():
-    num = 20
-    ks = np.linspace(2,50,500, endpoint=True)
+def plotECKPfun(psl, klower, kupper):
+    num = len(psl)
+    ks = np.linspace(klower,kupper,5000, endpoint=True)
     ksr = np.repeat(np.array([ks]).T, num, axis=1)
-    ps = np.around(np.linspace(0.85, 1, num, endpoint=False), decimals=3)
+    ps = np.array(psl)#np.around(np.linspace(0.85, 1, num, endpoint=False), decimals=3)
     gs = eckp(ksr, ps).T
 
     plt.figure(1)
@@ -35,6 +35,9 @@ def plotECKPfun():
     for i in range(0, num):
         plotECKP(i, ks, gs, ps)
     plt.show()
+
+    # So I want ot see 0.85, 0.95 (k=2 to 50
+    # 0.3, 0.6, 0.7, 0.85 (k=2 to 10)
 
     '''
     bks = best_k(ps)
@@ -66,6 +69,7 @@ def plotNRounds():
     plt.subplot(2,3,1)
     #plt.title("1/p^2")
     plt.xlabel("(a)")
+    plt.ylabel("Expected rounds to acceptance")
     plt.plot(ps1,cs3)
     plt.subplot(2,3,2)
     #plt.title("1/p^3")
@@ -78,7 +82,7 @@ def plotNRounds():
     plt.subplot(2,3,4)
     #plt.title("1 - (p^3 + p^3 * (1 - p^3))")
     plt.xlabel("Acceptance probability p \n (d)")
-    plt.ylabel("Expected rounds to acceptance")
+    plt.ylabel("Probability not accepted in 2 rounds.")
     plt.plot(ps2,ppb)
     plt.subplot(2,3,6)
     #plt.title("1 - (p^2 + p^2 * (1 - p^2))")

@@ -97,12 +97,21 @@ http://expandedramblings.com/index.php/ebay-stats/ --> average of 4 ORpairs per 
 Questions:
   -- Minimalistic, but sufficient that someone can REPRODUCE my work by reading my paper. So referenced papers' ideas you use will have to be explained sufficiently but not excessively.
 
-  
+
   -- Explain what a reputatation sytsem is and how it actually helps... and give references to some such systems, such as feedback in eBay and oDesk.
 
 
+  -- Send as complete as possible a draft by 13th and tell supervisors what parts are most interesting to look at.
+
+  -- and explain that I use the power law distribution from the other paper :p
+
   -- plot size (obvious, but yeah)
 
+  -- 2-cycles FOLLOWED by shortest cycle or MAX WEIGHT/CARD
+
+  -- expected exponent log???
+
+  -- Remember to do it on the same instance
 
   -- Keep track of hard and easy to match tasks!
     -- Are short steps better for all around wait time even if not total matches?
@@ -114,6 +123,7 @@ percentage of easy-to-match pairs grows." (Anderson)
 
   -- METHODOLOGY SECTION :p
 
+  -- beamer, overlays, 'animation'
 
   -- Find out how many cycles are in the graphs
 
@@ -125,14 +135,7 @@ percentage of easy-to-match pairs grows." (Anderson)
 
   -- In our experience with UNOS, the number of altruists is typically around 5% the size of the candidate pool
 
-
-  -- Amazingly, most planned matches fail to go
-to transplant! In the case of the UNOS exchange, roughly 90% of matches fail [131], and most
-matches fail at other kidney exchanges as well [e.g., 22, 48, 143].
-    We use this value for our
-first set of simulations, setting the probability of a crossmatch failing to be a constant 70%. This
-70% expected failure is optimistic (i.e., too low) in that it ignores the myriad other reasons for
-match failures.
-
-
 Leshno (2015) :: mismatched item may be preferable to waiting a long time
+
+
+  --
