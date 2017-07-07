@@ -2,7 +2,7 @@
 
 \begin{document}
 
-\section{Matching Algorithms}
+\section{Matching Algorithms} \label{sec:algorithms}
 The matching problem is solved on the static graph every $n_{match}$ steps. One goal for the optimization algorithms is to find the maximum edge-disjoint cycle covering, which can be solved as Min-D-DCC is solved \cite{Man1} \cite{Bir}. The section \ref{bima} discusses this PTIME algorithm. This is optimal for $p=1$.
 
 With $p<1$, the matching problem is to find the maximum cycle-weight edge-disjoint cycle covering, where cycle weight is $\E[c_k] = k p^k$. This problem is NP-Hard and APX-Complete \cite{Bir}. See Dickerson \cite{Dick} \cite{Dick3} for the state-of-the-art ILP (integer linear programming) solving this problem for kidney exchange.
@@ -38,6 +38,23 @@ GSC is similar to Maximal and Greedy in Abbassi \cite{Abb1}. However, Maximal ch
 
 \subsubsection{Product of Degrees Order (GSC-POD)}
 Jia \cite{Jia1} find that ordering the nodes prior to running a greedy shortest cycle cover algorithm boosts results. This seems wise with GSC as well. The reasoning is that a cycle for an ORpair with a well-connected, popular, task may use up the only cycle for an unpopular task. An additional perk of finding the shortest cycle is that this cycle is less likely to use up an ORpair needed by another ORpair unpopular task.
+
+\subsubsection{Neo4j Query Implementation of GSC}
+GSC can actually be implemented in one query in Neo4j's query-language Cypher:
+
+\begin{verbatim}
+  MATCH (o:ORnode)-[reqR:Request]->(req:Task),
+  p = shortestPath((req)-[link*]->(o))
+  WHERE NOT exists(reqR.matched) AND
+  ALL (r IN relationships(p) WHERE NOT exists(r.matched)) 
+  FOREACH (r IN link | SET r.matched = TRUE)
+  SET  reqR.matched = TRUE
+  WITH FILTER(ornode IN nodes(p) WHERE ornode:ORnode) AS p
+  UNWIND p as off
+  MATCH (off)<-[]-()<-[]-(req:ORnode)
+  WHERE req IN p AND off.offer = req.request
+  CREATE (off)-[:Match]->(req)
+\end{verbatim}
 
 \subsection{Dynamic Shortest Cycle (DYN-SC)}
 Dynamically find shortest cycles involving just added ORpairs every few (1 to 10) steps.

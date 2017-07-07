@@ -4,40 +4,57 @@
 
 \section{Further Work}
 
+\subsection{Gift Chains}
 
 If time allows, the impact of a few gifts and their chains will be investigated. Kidney exchanges increasingly rely on chains \cite{Dick}, and Anderson's theoretical analysis \cite{And1} implies the advantage of chains over exchanges only may be comparable to that found by Abbassi for credit mechanisms \cite{Abb2}.
 
+\subsection{Anysnchronous Exchange}
+Asynchronous Exchange as described in the HOR section should be tested.
+
+
 \section{Additional Features}
+This section discusses potentially desirable features an an offer network could have that are beyond the scope of this thesis.
 
-Below is a list of potentially desirable features of an offer network that don't qualify for an MVP:
-\begin{itemize}
-  \item Reputation biased matching
-  \item Preferences for matching based on
-    \begin{itemize}
-      \item User preferences
-      \item Task prefreences
-    \end{itemize}\subsection{Additional Features}
+\subsection{Reputation Biased Matching}
+As mentioned in the Algorithms section \ref{sec:algorithms}, users' reputation can be used to bias matching. This means that users with higher reputation will be more likely to have their ORpairs satisfied.
 
-Below is a list of potentially desirable features of an offer network that don't qualify for an MVP:
-\begin{itemize}
-  \item Reputation biased matching
-  \item Preferences for matching based on
-    \begin{itemize}
-      \item User preferences
-      \item Task prefreences
-    \end{itemize}
-  \item ORs and ANDs of offers or request
-  \item Task categories for hard/soft constraints
-    \begin{itemize}
-      \item Similarity based task-grouping
-    \end{itemize}
-\end{itemize}
-  \item ORs and ANDs of offers or request
-  \item Task categories for hard/soft constraints
-    \begin{itemize}
-      \item Similarity based task-grouping
-    \end{itemize}
-\end{itemize}
+One way to do this is including reputation in weights. In MAX-WEIGHT, this could be a function of both the offer user's reputation and the request user's reputation.
 
+In GSC, the order of the nodes could be influenced by reputation. Of course shortest weighted paths can be found for GSC, but the function here is limited to $(+)$.
+
+A drawback is that users with lower reputation will have trouble gaining reputaiton as users with higher reputation have more opportunities to further build reputation. A coarse version of this feature would only bias matching against users with no positive feedback yet: this way users are prevented from having to risk agreeing to an exchange with new users.
+
+A modification that counters this drawback would be to bias matching to prefer exchanges with users that have similar reputation: then new users are simply more likely to exchange with each other as they build reputation and test each other.
+
+\subsection{Preference Biased Matching}
+In this thesis' version, acceptance probability is uniform and ORpairs are matched irrespective of the user that uploaded them. However, in practice whether a user accepts a match will depend on the other users' profiles, histories, and reputations. Reputation biased matching is one form of this.
+
+If a user lists knowledgeable categories or skills, then users could upload desirable caterories or skills for users to possess along with an ORpair. These soft contraints\footnote{Soft contraints bias matching but do not necessarily need to be satisfied.} could be added in similar to reputation.
+
+Tasks are presently described only by their name. In reality, there may be a hierarchy of types of tasks used for matching. However, if task descriptions are too detailed, then every task may be unique and impossible to match. This means that if there are, for example, 100 offers and requests for a task, some will actually be better matches for each other than others. Hard constraints only define a task insofar as necessary for matching. Additional properties of the specific task desired can be added to the task description to bias the matching, that is, soft constraints.
+
+\subsection{Similarity Based Task Grouping}
+As tasks get more detailed, it may be desirable to match two similar tasks as a user may find this acceptable anyway. This would require some sort of task clustering based on (hierarchical) categories and properties\footnote{Viktoras Veitas at the Global Brain Institute deserves credit for this idea.}. The desirability may increase with the user's wait time.
+
+\subsection{ORs and ANDs of offers and requests}
+\subsubsection{OR}
+
+In Abbassi \cite{Abb1} \cite{Abb2} users just have "wish lists" and "item lists" but they don't specify preferred combinations of items to exchange as ORpairs. This is basically an exclusive OR of offers and requests: (offer: $task_a \vee \dots \vee task_z$, request: $task_1 \vee \dots \vee task_15$)\footnote{$\vee$ :- OR and $\wedge$ :- AND}. A user can specify sets of tasks of subjectively equivalent value. One may want to specify a set of offers one is willing to do any one of in exchange for a request: (offer: $\vee_{t \in Offers} t$, request: $task_a$).
+
+Implementation-wise, one can add an ORpair for each combination: $\{(o,r) : o \in Offers,r \in Requests\}$. However one needs a match to be, in Abbassi's terms \cite{Abb1}, \textit{conflict-free}: only one offer and one request in the set is used. This is easy to model in an ILP (integer linear programming) approach (although doing so in an efficient way may be harder). One way in the present graph framework that makes the cycles edge-disjoint is to split the ORpair into two nodes with one edge-between them, the offer node has an edge to each offer and the request node an edge to each request.
+
+\subsubsection{AND}
+What if a user needs two separate tasks to be done together (but not only one)? (offer: $task_a$, request $task_b \wedge task_c$). The reason not to make this one task is because different users may do each of the tasks.
+
+In the case of work contracts where one is paid in money, an ORpair with multiple offers that must all be done and one request (money) is very common. Cases in terms of trade of tasks and services alone are harder to think of. This presents a problem as it would be hard to find a cycle with one ORpair requesting two tasks and none offering two, unless there are task that can satisfy multiple users.
+
+At present, the author is not sure how to implement ORpairs with ANDs in the graph framework.
+
+\subsection{Conditional Offers and Requests}
+One theme discussed a lot with the Global Brain Institute is whether an offer network can be used to organize work on open source projects. Thus one may want to offer to work on a project if and only if 4 other people offer to work on the project.
+
+The distinguishing feature is that the 'request' in a conditional offer does not need to be part of a cycle or an exchange. However, the conditional event (task being done) could be part of a cycle involving the conditional offer being done!
+
+At present, the author is not sure how to implement conditional ORpairs.
 
 \end{document}
