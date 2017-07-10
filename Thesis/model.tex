@@ -17,12 +17,12 @@
   \label{example2}
 \end{figure}
 
-An \textbf{offer network} instance can be formally modeled as a directed graph, $G$, where vertices $task \in T$ represent tasks, $uuser \in U$ users, and labeled directed edges $(task_a,task_b)$ represent an offer by user $user_1$ to do task $task_a$ in exchange requested task $task_b$. Due to implemention details in Neo4j\footnote{\url{https://neo4j.com/}}, (offer, request) nodes are created for labeled directed edges, called \textbf{ORpairs}. This is the \textbf{the task-centric model}\footnote{An alternative is an \textbf{ORpair-centric model} where each ORpair is directly linked to all offer or request compatible ORpairs.}.  See Figure \ref{example1}.
+An \textbf{offer network} instance can be formally modeled as a directed graph, $G$, where vertices $task \in T$ represent tasks, $user \in U$ users, and labeled directed edges $(task_a,task_b)$ represent an offer by user $user_1$ to do task $task_a$ in exchange requested task $task_b$. Due to implemention details in Neo4j\footnote{\url{https://neo4j.com/}}, (offer, request) nodes are created for labeled directed edges, called \textbf{ORpairs}. This is the \textbf{the task-centric model}\footnote{An alternative is an \textbf{ORpair-centric model} where each ORpair is directly linked to all offer or request compatible ORpairs.}.  See Figure \ref{example1}.
 
 A matching of users who can satisfy each other is a vertex cycle. See the simplest case below in Figure \ref{example2}. There is a match acceptance probability $p$, which is assumed to be uniform and independent\footnote{Moreover, Dickerson \cite{Dick} notes this assumption potentially also protect users, such as badly sick patients, from being marginalized in addition to being simpler to analyze.}.
 
 \subsection{Scale-Free Task Distribution}
-The ReadItSwapIt data is scale-free. This means that for large degrees $k$, the fraction of nodes with degree k is proportional to $k^{-\gamma}$\footnote{\url{https://en.wikipedia.org/wiki/Scale-free_network}}. $\gamma$ is called the power law exponent. Abbassi \cite{Abb2} do not provide much anlaytics of the ReadItSwapIt data; however they experiment with $\gamma = {0,0.25,0.5,0.75,1}$. In colloquial terms, this means that a few tasks are very popular and most tasks are only offered or requested by a few users. There will likely be a small difference in \textit{offer} and \textit{request} popularity for tasks.
+The ReadItSwapIt data is scale-free. This means that for large degrees $k$, the fraction of nodes with degree k is proportional to $k^{-\gamma}$\footnote{\url{https://en.wikipedia.org/wiki/Scale-free_network}}. $\gamma$ is called the power law exponent. Abbassi \cite{Abb2} do not provide much anlaytics of the ReadItSwapIt data; however they experiment with $\gamma = \{0,0.25,0.5,0.75,1\}$. In colloquial terms, this means that a few tasks are very popular and most tasks are only offered or requested by a few users. There will likely be a small difference in \textit{offer} and \textit{request} popularity for tasks.
 
 Worth mentioning on this note is a user-centric study of the eBay graph \cite{ebay}\footnote{The data is obtained via crawling eBay feedback.}. They noted the following properties on eBay:
 
@@ -61,7 +61,7 @@ $X_{IN}$ and $X_{OUT}$ are the power law exponents. Note that in this model in-d
 The modification of the model generates a set number of edges and for each edge adds a new task with probability $\alpha + \gamma$.
 
 \subsection{Dynamics}
-The dynamic offer network experiment starts with a scale free graph generated as above with $N^o_{initial}$ ORpairs and $N^u_0$ users. Each step 1 ORpair is added, and every $n^u$ steps a user is added. With probability $\alpha + \gamma$ a new task is added with the ORpair. The experiment is run until $N^o_{end}$ ORpairs have been added. Every $n_{match}$ steps matchings are suggested, accepted or rejected by users, and accepted ORpairs are removed from the graph.
+The dynamic offer network experiment starts with a scale free graph generated as above with $N^o_{initial}$ ORpairs. Each step 1 ORpair is added. There are $n^u$ ORpairs for each user, so every $n^u$ steps a user is added. With probability $\alpha + \gamma$ a new task is added with the ORpair. The experiment is run until $N^o_{end}$ ORpairs have been added. Every $n_{match}$ steps matchings are suggested, accepted or rejected by users, and accepted ORpairs are removed from the graph.
 
 It is possible to make $n^u$ be probabilistic as with new tasks, and it's possible to make $n_{match}$ depend on the graph size.
 

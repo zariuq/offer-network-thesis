@@ -21,6 +21,17 @@ def dynamicMatch(driver, nodeID_and_stepSize):
 
             tx.run(command)
 
+# Like gscmatch, but only looks for shortest cycles on just added nodes!
+def dynamicMatchL(driver, nodeIDs):
+    justAddedIDs = '[' + ", ".join("\'%s\'" % (id) for id in nodeIDs) + ']'
+    print("Running greedy shortest cycle match query on just added ORnodes:")
+    with driver.session() as session:
+        with session.begin_transaction() as tx:
+            command = "MATCH (o:ORnode)-[reqR:Request]->(req:Task), p = shortestPath((req)-[link*]->(o)) WHERE o.id in {0} AND NOT exists(reqR.matched) AND ALL (r IN relationships(p) WHERE NOT exists(r.matched)) FOREACH (r IN link | SET r.matched = TRUE) SET  reqR.matched = TRUE WITH FILTER(ornode IN nodes(p) WHERE ornode:ORnode) AS p UNWIND p as off MATCH (off)<-[]-()<-[]-(req:ORnode) WHERE req IN p AND off.offer = req.request CREATE (off)-[:Match]->(req) ".format(justAddedIDs)
+
+            tx.run(command)
+
+
 # Simply runs the query transaction!
 # Picks arbitrary node, finds shortest cycle, then rinses and repeats without overlapping
 def gscmatch(driver):
@@ -309,7 +320,7 @@ def getcycles(driver):
             total += len(cycle)
             #print("\n".join("%s" % (node) for node in record.values()[0]))
             #print("\n")
-    print("Found %s cycles containing %s of %s pairs." % (len(cycles), total, totalPairs))
+    print("Found %s cycles containing %s of %s pairs. \n%s orPairs per cycle." % (len(cycles), total, totalPairs, total / len(cycles)))
     print("\n\n".join(" ".join("(%s,%s)" % (orNode['id'], orNode['wait']) for orNode in cycle )for cycle in cycles))
     return (total, totalPairs, cycles)
 
@@ -424,8 +435,8 @@ def removecycles(driver, hold, p, stats, G=None):
             waitTime = "({0}),({1}),{2},{3}".format(node1['waitTimes'], node2['waitTimes'], node1['wait'], node2['wait'])
             newNodes.append(add_ORnode(node[0], node[1])
                             + "SET ornode.waitTimes = \'{0}\' ".format(waitTime))
-            if not G == None:
-                G.add_edge(node[1][0], node[1][1], key = node[0], user = node[1][2])
+            #if not G == None:
+            #    G.add_edge(node[1][0], node[1][1], key = node[0], user = node[1][2])
             newUsers.append(update_user(user_id=node1['user'] + ',' + node2['user']))
             print(node)
 

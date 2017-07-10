@@ -8,7 +8,7 @@ import itertools
 import networkx as nx
 from ast import literal_eval # "[...]" -> [...]
 from munkres import munkres
-from networkx_graph_gen import scale_free_graphX
+from networkx_graph_gen import scale_free_graphX, scale_free_graphXL
 
 def add_task(task_id):
     return "CREATE (task{0}:Task {{id:\'{0}\'}}) ".format(task_id)
@@ -217,6 +217,25 @@ def processEdges(G, f, *p):
             for keydict in dict.values():
                 f(n,nbrdict,nbr,dict,keydict, i, *p)
                 i+=1
+
+# Generate a list of Neo4j graph updates to run experiments by -- BUT don't add them now.
+def generate_sfgL(driver, NORend, nU, alpha, gamma, beta, directed_p, delta_in, delta_out):
+    # Short-cut generator where fixed graph generation parameters are set
+    def sfg(nn, nu, created_using=None):
+        return scale_free_graphXL(nn, nu, alpha=alpha, gamma=gamma, beta=beta, directed_p=directed_p, delta_in=delta_in, delta_out=delta_out, create_using=created_using)
+    # First generate initial setting prior to matching being run.
+    G, updates, Nusers, Ntasks = sfg(NORend, nU)
+
+    # Add the initial 3 ORpairs
+    # This has to be done because task/users should be added before ORpairs, and initially more than one have to be added in a step.
+    node_commands = []
+    for i in range(0,3):
+        node_commands.append(updates[i][0])
+        node_commands.append(updates[i][1])
+    command = "\n".join(node_commands)
+    with driver.session().begin_transaction() as tx:
+        tx.run(command)
+    return G, updates[3:], Nusers, Ntasks
 
 def generate_sfgX(driver, NORnodes, Nusers):
     G, task_commands, orPair_commands = scale_free_graphX(0, 0, NORnodes, Nusers, alpha=0.3, gamma=0.3, beta=0.4, directed_p=0.25, delta_in=0.5, delta_out=0.5)

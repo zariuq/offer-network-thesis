@@ -19,7 +19,7 @@ def get_matches(driver, matchingAlgorithm, hold, p, justAddedIDs, stats, G=None)
         dynamicMatch(driver, justAddedIDs)
     else:
         raise ValueError('Incorrect matching algorithm key.')
-    (total, totalPairs, cycles, waitTimes, G) = removecycles(driver, hold, p, stats, G)
+    (total, totalPairs, cycles, stats, G) = removecycles(driver, hold, p, stats, G)
     return (total, totalPairs, cycles, stats, G)
 
 # Initially, Erdos-Renyi style update
