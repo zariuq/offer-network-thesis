@@ -4,16 +4,46 @@
 
 \section{Further Work}
 
-\subsection{Gift Chains}
+The below list covers various additions or fixes to the present implementation or tests to do with it to learn more about dynamic offer networks.
 
-If time allows, the impact of a few gifts and their chains will be investigated. Kidney exchanges increasingly rely on chains \cite{Dick}, and Anderson's theoretical analysis \cite{And1} implies the advantage of chains over exchanges only may be comparable to that found by Abbassi for credit mechanisms \cite{Abb2}.
+\subsection{Upgrade Dynamic Matching}
+DYN performed poorly as $p$ decreased. This can, with high likelihood, be fixed by adding rejected ORpairs and held ORpairs into the dynamic matching with the newly added ORpairs.
 
-\subsection{Anysnchronous Exchange}
-Asynchronous Exchange as described in the HOR section should be tested.
+\subsection{Cycle Scarcity Analysis}
+MAX-2 performance hints that 2-cycles are rare. Kidney graphs are dense, but are k-cycles in these scale free graphs rare?
+
+\subsection{Fix: Prevent Match Repetition}
+In the present thesis matching algorithms are permitted to suggest the same match multiple times. With large step-sizes or greedy cycle covers starting at random nodes, this assumption should be ok. However, the good performance of very small step sizes could, in part, be due to repeatedly suggesting matches until they are eventually accepted. This especially seems a likely explanation of the counterintuitive outcome that more ORpairs are matched with low $p$ than high $p$; although the results do not seem entirely explained by this. Thickening of the market and increasing dynamism seem to be at play as well.
+
+This fix may require a less concise graph representation such as the one used for MAX-WEIGHT that allow an edge to be removed between one user's $offer$ and another user's $request$ after one of them rejected the match. The edges could be adde directly between ORpairs.
+
+\subsection{ORpair Expiration}
+Akbarpour \cite{Akb1} found that the greedy strategy was no longer optimal when ORpair expiration time exists and is known to the system. This feature can easily be added by adding an \textbf{expire by} property to ORpairs. Weight or greedy search order can be modified to take this property into account.
+
+\subsection{Match Suggestion Limits}
+Especially without HOR, sustained performance at low $p$ relies on suggesting many matches to users prior to acceptance. Human users will likely dislike this. First, the amount of matches suggested each round should be measured, and if it does indeed increase, limits on how many times an ORpair can be matched or with what frequency ORpairs can be matched should be tested.
+
+This could be done by decrementing a counter each time an ORpair is matched. Another method is to remove matched cycles from the graph whether accepted or not, and add them to a queue to be re-added in $Q$ steps.
+
+\subsection{Longer Run Experiments}
+What are the long term implications of an algorithm that matches hard-to-match ORpairs better? Will the number of hard-to-match ORpairs increase with time running another matching algorithm, resulting in a decrease of matches over time?
+
+\subsection{Low $p$ Graph Size Experiments}
+In one $5000$ step run more than $5000$ ORpairs were matched. Thus graph size over time experiments need to be re-run with this setting: perhaps there is a steady state.
 
 
 \section{Additional Features}
 This section discusses potentially desirable features an an offer network could have that are beyond the scope of this thesis.
+
+\subsection{Gift Chains}
+
+The impact of a few gifts and their chains will be interesting to investigate. Kidney exchanges increasingly rely on chains \cite{Dick}, and Anderson's theoretical analysis \cite{And1} implies the advantage of chains over exchanges only may be comparable to that found by Abbassi for credit mechanisms \cite{Abb2}.
+
+\subsection{Asynchronous Exchange}
+Asynchronous exchange as described in the HOR section should be tested.
+
+\subsection{Artificial Rejection}
+Asynchronous exchange proved the offer network with more dynamism. However if mid-$p$ ranges perform better, some suggested cycles could be randomly rejected to provide this benefit if the acceptance probability is too high. Attempting to learn potentials as in Dickerson \cite{Dick} and exclude these from greedy matching heuristics may also prove fruitful.
 
 \subsection{Reputation Biased Matching}
 As mentioned in the Algorithms section \ref{sec:algorithms}, users' reputation can be used to bias matching. This means that users with higher reputation will be more likely to have their ORpairs satisfied.
@@ -35,6 +65,8 @@ Tasks are presently described only by their name. In reality, there may be a hie
 
 \subsection{Similarity Based Task Grouping}
 As tasks get more detailed, it may be desirable to match two similar tasks as a user may find this acceptable anyway. This would require some sort of task clustering based on (hierarchical) categories and properties\footnote{Viktoras Veitas at the Global Brain Institute deserves credit for this idea.}. The desirability may increase with the user's wait time.
+
+Rappaz \cite{Rap1} make headway in this direction with their ordered swap list recommender sytsem.
 
 \subsection{ORs and ANDs of offers and requests}
 \subsubsection{OR}

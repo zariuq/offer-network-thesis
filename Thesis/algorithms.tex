@@ -15,7 +15,7 @@ The standard algorithm to find a maximum edge-weight edge-disjoint cycle coverin
 
 The bipartite graph has one side for Offers and one for Requests. For each ORpair, (offer=$task_a$, request=$task_b$), create two nodes with edge weight $0$. Next an edge is created between the offer node and every request node for $task_a$ with weight $> 0$. Then a maximum weight perfect matching algorithm can be used. A positive weighted edge for an offer can only be matched if the corresponding request has a positive weighted edge match; if the ORpair is in no cycle, then the $0$ weight edge is mached.
 
-The bipartite graph has $2*|ORpairs|$ nodes and $\bO(|ORpairs|^2)$ edges. The perfect weighted matching can be found via Munrkes algorithm or the Hungarian algorithm in $\bO(n^3)$ time.
+The bipartite graph has $2*|ORpairs|$ nodes and $\bO(|ORpairs|^2)$ edges. The perfect weighted matching can be found via Munrkes algorithm or the Hungarian algorithm in $\bO(N^3)$ time.
 
 The positive weight can be used to assign preferences to some ORpairs over others, perhaps due to user preferences (soft constraints), proportional to task popularity (degree), or according to reputation. Weights could also be used to represent non-uniform acceptance probability, which may be a useful heuristic.
 
@@ -31,13 +31,15 @@ A simple heuristic is to pick an arbitrary node, find the shortest cycle\footnot
 
 The rationale is that for $p < 0.85$ cycles of length $k < 10$ are optimal, and specifying an exact cycle length cap may not provide much additional gain.
 
-The run-time is $\bO((|ORpairs| + |tasks|\ln|tasks|)|ORpairs)$; however, many the search for many ORpairs will be cut short because of already matched cycles.
+The run-time is $\bO((|ORpairs| + |tasks|\ln|tasks|)|ORpairs|)$; however, many the searches for many ORpairs will be cut short because of already matched cycles. The search can also be done as part of a graph traversal.
 
 \subsubsection{Relation to Maximal and Greedy (GSC-M)}
 GSC is similar to Maximal and Greedy in Abbassi \cite{Abb1}. However, Maximal chooses any cycle and Greedy finds the maximum weight cycle, which is slow. As with Maximal, running GSC $M$ times and choosing the best cover may result in significantly better results.
 
 \subsubsection{Product of Degrees Order (GSC-POD)}
 Jia \cite{Jia1} find that ordering the nodes prior to running a greedy shortest cycle cover algorithm boosts results. This seems wise with GSC as well. The reasoning is that a cycle for an ORpair with a well-connected, popular, task may use up the only cycle for an unpopular task. An additional perk of finding the shortest cycle is that this cycle is less likely to use up an ORpair needed by another ORpair unpopular task.
+
+In this thesis task popularity is measured by degree, and the PoD of an ORpair by the product: $deg(offer) * deg(request)$.
 
 \subsubsection{Neo4j Query Implementation of GSC}
 GSC can actually be implemented in one query in Neo4j's query-language Cypher:
@@ -46,7 +48,7 @@ GSC can actually be implemented in one query in Neo4j's query-language Cypher:
   MATCH (o:ORnode)-[reqR:Request]->(req:Task),
   p = shortestPath((req)-[link*]->(o))
   WHERE NOT exists(reqR.matched) AND
-  ALL (r IN relationships(p) WHERE NOT exists(r.matched)) 
+  ALL (r IN relationships(p) WHERE NOT exists(r.matched))
   FOREACH (r IN link | SET r.matched = TRUE)
   SET  reqR.matched = TRUE
   WITH FILTER(ornode IN nodes(p) WHERE ornode:ORnode) AS p
@@ -78,7 +80,7 @@ The Hanging ORpair approach is best exemplified by the following two acceptance 
 
 The core idea is that a match being found implies parity among the tasks involved ($a, b, c, d, \dots$). Thus odds are there will be more matches for the new ORpair. Gambling on this, long cycles and 3-cycle coverings can expect the same number of satisfied ORpairs.
 
-Algorithmically speaking, MAX-WEIGHT can be used in the mid-p rangeto find the maximum weight edge-disjoint cycle cover, and rejectors and hanging ORpairs can be rematched. This is preferable to other methods because there will still be as many rejectors (as $p$ is uniform).
+Algorithmically speaking, MAX-WEIGHT can be used in the mid-p range to find the maximum weight edge-disjoint cycle cover, and rejectors and hanging ORpairs can be rematched. This is preferable to other methods because there will still be as many rejectors (as $p$ is uniform).
 
 Finally, when multiple adjacent users in a match reject, the acceptors on either side of the streak can be joined to form a hanging ORpair.
 
@@ -93,7 +95,7 @@ Some theoretical drawbacks concern the fact that the parity assumption is not al
 
 These situations could result in one user being markedly worse off in the HOR approach. And if not, they could worsen the practical drawbacks.
 
-A user's ORpair is not expected to be held more than 1-2 times in the mid-p range (see section \ref{sec:nrounds}), but this says nothing about the wait time between rounds.
+A user's ORpair is not expected to be held more than 1-2 times in the mid-p range (see section \ref{sec:nrounds}), but this says nothing about the wait time between rounds. Moreover, when a held ORpair is held again, one of the originally held \textbf{offers} or \textbf{requests} is satisfied, further decreasing the expected wait time for a user.
 
 Additional drawbacks:
 \begin{itemize}
@@ -122,7 +124,7 @@ A standard way to do this is via a reputation system\footnote{\url{https://en.wi
 
 In an offer network, users could get feedback on tasks they offer after accepting a match. A user accepting a match and then not delivering will result in negative feedback. Users will be very likely to reject a match with a user with negative feedback\footnote{Reputation can also be part of the matching system; although this makes the entry barrier harder for new users.}. In this way, the reputation system largely prevents users from leaving after they receive their request.
 
-\subsubsection{Offer Reneging}
+\subsubsection{Offer Reneging and Quees} \label{sec:horquee}
 The above discussion is about an algorithm users can opt in to \textit{prior} to binding acceptance of a match. Users well, however, accept a match and then renege and not deliver the offered task. A reputation system can make it hard for the user to find new matches in the future, but the user promised vis request needs to be dealt with as well. A hanging ORpair cannot be created with just one hanging request.
 
 Without gifts or asynchronicity\footnote{Asynchronous exchange is mentioned by Abbassi \cite{Abb2}, but only implemented via a credit system.}, the only option is to, unfortunately, ask the user to re-upload his ORpair with a higher weight next time the matching system is run. Or, perhaps, to immediately  This would result in the user giving an offer twice; otherwise, the same reneging problem would propogate around the cycle.

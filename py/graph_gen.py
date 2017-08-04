@@ -226,16 +226,7 @@ def generate_sfgL(driver, NORend, nU, alpha, gamma, beta, directed_p, delta_in, 
     # First generate initial setting prior to matching being run.
     G, updates, Nusers, Ntasks = sfg(NORend, nU)
 
-    # Add the initial 3 ORpairs
-    # This has to be done because task/users should be added before ORpairs, and initially more than one have to be added in a step.
-    node_commands = []
-    for i in range(0,3):
-        node_commands.append(updates[i][0])
-        node_commands.append(updates[i][1])
-    command = "\n".join(node_commands)
-    with driver.session().begin_transaction() as tx:
-        tx.run(command)
-    return G, updates[3:], Nusers, Ntasks
+    return G, updates, Nusers, Ntasks
 
 def generate_sfgX(driver, NORnodes, Nusers):
     G, task_commands, orPair_commands = scale_free_graphX(0, 0, NORnodes, Nusers, alpha=0.3, gamma=0.3, beta=0.4, directed_p=0.25, delta_in=0.5, delta_out=0.5)

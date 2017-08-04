@@ -1,0 +1,37 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{Discussion of Results}
+This thesis aims to explore how feasible offer networks\footnote{barter exchange networks} are with state-of-the-art matching algorithms. Exponential time algorithms, as used in kidney exchange networks, are both too specialized and slow to scale.
+
+\subsection{Matching Algorithm Feasibility Comparison}
+
+Offer networks with only MAX-2 are not feasible. Over a run of 3k or 5k steps (in $n_{match}$ tests), the algorithm matches under $200$ ORpairs. Moreover, the number of matches by MAX-2 decreases as the size of the graph increases (in the $N_{initial}$ test). Less than $5\%$ of ORpairs will be suggested a match
+
+MAX-WEIGHT performs almost as poorly as MAX-2 withou $p = 0.9$, and worse for $n_{match} > 200$. The algorithm also runs in $\bO(|ORpair|^3)$ time and cannot feasibly be run frequently on a large scale.
+
+For high $p$, the performance of GSC, GSC-POD, DYN, and MAX-WEIGHT all perform similarly in total matchings, wait time, and hold wait times. GSC-POD does a better job of matching hard-to-match (unpopular) ORpairs with HOR, but not without. MAX-WEIGHT appears to perform even better than GSC-POD for matching hard-to-match ORpairs: maximal cycle-covers include more hard-to-match ORpairs than biased greedy cycle covers. This makes sense as, recalling the distribution, $1/3$ of \textbf{tasks} have 3 or fewer \textbf{offers}: a maximal covering will have to utilize hard-to-mask ORpairs.
+
+The experiments, contrary to Anderson's findings \cite{And1}, indicate that perforance in total matched, wait time, and matched task popularity (PoD) do not decrease much for $p \geq 0.7$. Thus for mid and high $p$ ranges, a performance-optimized implementation of MAX-WEIGHT appears a feasible choice of matching algorithm.
+
+However, the greedy heuristics perform almost as well as MAX-WEIGHT in a fraction of the time, making them better choices for large scale offer networks. DYN runs significantly faster than GSC and tends to have smalle suggested match sizes. An updated DYN to include rejected ORpairs and held nodes in HOR will likely continue to match GSC's performance, and PoD is not much worse. DYN may be desirable for large scale offer networks.
+
+GSC-POD perfroms better than GSC at $p \geq 0.7$ without HOR, and worse for the low $p$. With HOR, GSC-POD performs equally with GSC except that the matched task popularity is an order of magnitude smaller. GSC-POD seems to only succeed in matching hard-to-match tasks much better for low $p$; in other cases, GSC performs worse than at high $p$ instead of the same. The long term benefits of matching more hard-to-match ORpairs, beside valuing fairness, have not been determined. If the benefits are not significant, GSC-POD is not worth the O(N) step of calculating the PoD for each ORpair.
+
+GSC is simple, fast, and performs well in more conditions than the other matching algorithms. An upgraded DYN may out-do it. GSC-POD's performance suggests there may be beneficial ways of modifying GSC only increasing the linear run-time coefficient \footnote{Moreover, there may be more efficient implementations than used in this thesis}.
+
+\subsection{Feasibility of GSC}
+GSC is the all-around best performing matching algoirthm, so how does it work as a market mechanism?
+
+Ideally, all ORpairs would be satisfactorily matched with a small wait time. At least, all matcheable ORpairs, as in the graphs tested up to $N_{end} = 15,000$ there were $757$ unmatcheable ORpairs\footnote{Unmatcheable means either the offer or request task had no corresponding ORpairs.} This is probably impossible, and even currency fails to satisfy all users in a market. How close can GSC come?
+
+Recall the $N_{initial}$ test with runs of $3000$ steps in Section \ref{exp:ninitial}. Wait time in these runs stabilizes at around $1,100$ steps. This is promising, however the total matched also stabilized around $800$: Section \ref{exp:gsize} shows the graph size keeps growing over time. That is, if a user's ORpair is matched, it's likely to happen quickly. Otherwise, the wait is long and the number of waiting ORpairs grows. Perhaps this may work with some ORpair expration setting. This, however, with $p=1$.
+
+With lower $p$, theoretically, users will have to be suggested multiple (if not many) matches before getting accepted. Recall that, with HOR, the number is $10$ matches prior to acceptance with $p=0.5$, 3 for $p=0.7$, 1.5 for $p=0.9$, and an enourmous 35 rounds for $p=0.3$. Cursory advice would be not to participate in an offer network if $p < 0.5$, but this seems to be the case for some kidney exchange patient-donor pairs who nonetheless get some help\footnote{Chains and gifts seem to greatly improve the situation for hard-to-match kidneys.}.
+
+A promising result for the feasibility of GSC for offer networks is that with HOR and $p=0.3$, more than $5000$ ORpairs are matched in a $5000$ step run: whether with $0.3 \leq p \leq 0.7$ a steady state graph size can be achieved or not needs to be tested. Both wait time and hold wait time are around the stable average value found with $p=1$. The $2000$ held nodes are held for, on average, two rounds\footnote{This is surprisingly low given the rejection probability of $p = 0.3$. which means that ORpairs are not suggested in matches too many times.}.
+
+The results indicate that GSC can be feasibly used for offer networks, at mid $p$ ranges matching nearly as many ORpairs as are added with stable, low wait times.
+
+\end{document}

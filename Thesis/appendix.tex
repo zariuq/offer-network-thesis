@@ -1,0 +1,92 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{Appendix: Supplemental Materials} \label{appendix}
+\subsection{Run Time Plots}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[b]{\textwidth}
+    \includegraphics[width=\textwidth]{{"timeTest-BM1 100"}.png}
+    \caption{BM1 - Run Times - Step Size 100}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{\textwidth}
+    \includegraphics[width=\textwidth]{{"timeTest-RB1 100"}.png}
+    \caption{RB1 Run Times - Step Size 100}
+  \end{minipage}
+\end{figure}
+
+\subsection{Step Size Test Plots}
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"nMatch-EN "}.png}
+    \caption{EN - Step Size Test 1}
+\end{figure}
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"nMatch 2-BM1 "}.png}
+    \caption{BM1 - Step Size Test 2}
+\end{figure}
+
+\subsection{Ninitial Test Plots}
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ninitial-BM1 "}.png}
+    \caption{Ninitial Test - BM1}
+\end{figure}
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ninitial-RB1 "}.png}
+    \caption{Ninitial Test - RB1}
+\end{figure}
+
+\subsection{Performance Consistency Test}
+Below are four experiment batches from Section \ref{exp:ptest2} to check that the results do not depend on particulars of RB1:
+
+1)
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ptest2-RB1 p=0.9, hold=0"}.png}
+    \caption{Performance Test - RB1 - $p = 0.9$ without HOR}
+\end{figure}
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ptest2-EN p=0.9, hold=0"}.png}
+    \caption{Performance Test - EN - $p = 0.9$ without HOR}
+\end{figure}
+
+\newpage
+2)
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ptest2-RB1 p=0.3, hold=0"}.png}
+    \caption{Performance Test - RB1 - $p = 0.3$ without HOR}
+\end{figure}
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ptest2-BM1 p=0.3, hold=0"}.png}
+    \caption{Performance Test - BM1 - $p = 0.3$ without HOR}
+\end{figure}
+
+\newpage
+3)
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ptest2-RB1 p=0.7, hold=1"}.png}
+    \caption{Performance Test - RB1 - $p = 0.7$ with HOR}
+\end{figure}
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ptest2-BM1 p=0.7, hold=1"}.png}
+    \caption{Performance Test - BM1 - $p = 0.7$ with HOR}
+\end{figure}
+
+\newpage
+4)
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ptest2-RB1 p=0.3, hold=1"}.png}
+    \caption{Performance Test - RB1 - $p = 0.3$ with HOR}
+\end{figure}
+
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{{"Ptest2-EN p=0.3, hold=1"}.png}
+    \caption{Performance Test - EN - $p = 0.3$ with HOR}
+\end{figure}
+
+\end{document}

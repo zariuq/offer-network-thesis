@@ -1,141 +1,163 @@
-10th of May -- morning
-
-Is there a sensible way of running this on social network graphs?
-
-2) Finish plumbing
-3) find <k cycle algorithm to implement or use.
-
-  -- Keep to-do list up to date
-  -- Literature
-    : Web-of-needs, and other related projects
-    : Market performance metrics
-      : What does ideal performance look like?
-      : Dynamic setting
-        : Average waiting time of user to get task fulfilled
-  -- Think about graph-based heuristics
-    : As you don't need to necessarily find 100% of the matches, 80%'d be fine
-    : Start from cycle-basis?
-  -- Look into realistic demographics for ON (offer network) instances
-    : perhaps via e-bay developers program API?
-    : try white-papers in industry
-    : {Seems not that much good literature, many related things do something pretty artificial.}
-      : 1) Draw edges for tasks from non-uniform distributions
-      : 2) Graph with clusters of task-types
-      - scale free seems awkward, well, depends on hub structure
-      - why not try erdos-renyi
-      - small-world seems cool
-      Not really correct, but could be fun: https://snap.stanford.edu/data/p2p-Gnutella04.html
-  -- Write code to generate ON instances (based on parameters)
-    : Now with non-random instances!
-  -- Adapt library / implement algorithm to match on instances
-  -- Set up together as Simulator for experiments
-  -- Run trials & measurements
-    : Test, test, test!
-  -- If time permits, try to extend features.
-    : benefit of chains! (gifts!)
-    : which methods would be easier to port to decentralized systems?
+nMatch 2 is like nMatch but all run on the same graph instance
 
 
-Personal Notes:
+Plot: Task popularity histogram, say, RB1 0.3 0 and RB1 0.6 1
+        RB1 0.7 0 interesting as gsc has better TP!
 
-First, I'll break the P-time matching! Yargh!
-
-ebay: (-- ONs)
-      skewed degree distribution (there are a few big sellers)
-        -- not likely in ONs, actually, likely almost none (at first)
-      disassortativity (users don't necessarily look for products they sell)
-        -- likely as well, although to a lesser degree than in ebay
-            -- so, not much clustering
-      densification (reputation)
-        -- if the feature is added
-      no rich club connectivity
-        -- yeah, prolly not in particular
-      only linear preferential attachment observed
-
-Watts-Strogatz model:
-  small world / clustering
+Plot: p vs TM in Ptest2 (and Ptest), with hold = 1
 
 
+Conclusions:
 
-Hmm, in random graphs,
-  nodes == tasks
-  edges == (offer, request) or (request, offer) (randomly choose again?)
-    -- unless a random directed model.
+All in all two-way-matches have dismal performance
 
-Okay, sounds doable enough ;-)
+dynamic performs worse and worse with decreasing p, but just because rejectedIDs not included with justAddedIDs. Easy fix. Moreover, held nodes aren't added!. Still not a hard fix, but blegh.
 
+Short match frequency matters more without the holding strategy. Seems to work.
 
-watts_strogatz_graph(n, k, p, seed=None)[source]
-Return a Watts-Strogatz small-world graph.
+p=1: gsc/d/gscpod all about the same. b is better
+      wait time is just better with step size < 100. Period.
+      even with b, match size is small
 
-Parameters:
-n (int) – The number of nodes
-k (int) – Each node is connected to k nearest neighbors in ring topology
-p (float) – The probability of rewiring each edge
-seed (int, optional) – Seed for random number generator (default=None)
+A difference of < 100 in total match size, frankly, is not that interesting. Order of magnitude differences are where it's at!
 
+Time: t and gsc about the same (1s)
+      d is an order of magnitude faster (0.3s)
+      pod is O(N)*dijkstras, so around 60s at 10k ORpairs
+      b is O(N^3), 27min by 3200 ORpairs
 
+      d depends on # new nodes (and in practice rejected/held)
+      gsc in principle scans whole graph, but Neo4j can combine cycle search with graph traversal, so faster
 
-Okay, what sort of graph can I expect for offer networks?
-
-I'd suspect there are no really big nodes, i.e., with an insane amount of offers.
-... Actually, that's irrelevant as the matching is done irrespective of the users!
-The question is task popularity.
-
-First, yes, some tasks will likely be much more popular than others, both to offer and to request... and those don't have to be the same.... although if there's not some degree of match, then we're kinda fucked, tbh.
-
-So one shouldn't really expect equal probability. What kind of distribution is to be expected though?
-The ebay data implied tasks weren't really that clustered: people would offer things in one category and request them in another. I suspect this will be less the case with services than things (i.e., selling what you have). However, I guess this would imply task-clustering low but existent.
-
-So scale free kinda makes sense with low (but not no) clustering.
-
-http://expandedramblings.com/index.php/ebay-stats/ --> average of 4 ORpairs per user
+      There _may_ be Cypher query for pod giving faster performance
 
 
+Ptest2 (Ninitial = 10k, run 5k)
+hold 1:
+  p=
+  0.3: gsc/pod dominate -- pod good for task popularity (TP)
+        hold time is around 2 ;-), hold wait time (HWT) around 2x
+        Total held = 2/3 total matched!
+  EN 0.3: fewer toal matched, but gsc=pod. pod TP better
+  0.5: gsc=pod, pod good TP
+        HWT 2x, hold time 1.5!
+        TH = 1/2 TM
+  0.6: gsc=pod, pod good TP
+        TH = 1/2 TM
+  0.7: gsc = pod, pod good TP
+        HWT 1.5x, hold time 1.2 avg!
+        d TM = 1/2 gsc TM
+        TH = 1/3 TM
+  BM1 0.7: gsc=pod, pod good TP... about the same
+  0.8: gsc close to pod, bit higher, pod good TP, but same order of magnitude as gsc
+        d getting closer
+        hold time 1.1
+  0.9: gsc = pod, TP same
+        hold wait time < wait time avg, hold time near 1 avg
 
+hold 0:
+  p=
+  0.3: gsc dominates -- pod does better for marginal tasks though
+        dynamic is very bad
+          (because there are so many rejects it doesn't try to rematch
+          -- could be fixed by adding in rejected IDs to the justAddedIDs!)
+        t rivals pod in total matched, but is horrible in task popularity!
+  BM1 0.3: gsc dominates, pod better TP -- except at step-size 1
+  0.5: Indications pod will dominate at low match frequency, better for TP
+        pod has worse wait time though.
+        dynamic still bad
+  0.7: pod > gsc, even with 50 match frequency!
+        but gsc has slightly better TP
+  0.9: gsc bit better, and better TP!
+  EN 0.9: about same, TP better for gsc
+
+Ptest (Ninitial = 400, run 3000)
+
+hold = 1:
+  p=
+  0.7: gsc=pod=b
+       b > pod >> gsc in TP!
+       hold time 1.3, hold wait time 1.5-2x
+  0.8: gsc=pod=b, same in TP, HWT 1.5-2x, hold time 1.3
+  0.9: gsc=pod=b, same in TP but b better
+    HWT ~ 1.5x, HT close to 1
+
+hold = 0:
+  p=
+  0.9: gsc = pod (pod bit better), same TP
+        b performs tragically
 
 Questions:
   -- Minimalistic, but sufficient that someone can REPRODUCE my work by reading my paper. So referenced papers' ideas you use will have to be explained sufficiently but not excessively.
 
-
-  -- Explain what a reputatation sytsem is and how it actually helps... and give references to some such systems, such as feedback in eBay and oDesk.
-
-
-  -- Send as complete as possible a draft by 13th and tell supervisors what parts are most interesting to look at.
-
-  -- and explain that I use the power law distribution from the other paper :p
-
-  -- plot size (obvious, but yeah)
-
   -- 2-cycles FOLLOWED by shortest cycle or MAX WEIGHT/CARD
 
-  -- expected exponent log???
-
-  -- Remember to do it on the same instance
-
-  -- Keep track of hard and easy to match tasks!
-    -- Are short steps better for all around wait time even if not total matches?
-      -- But then are they better for the easy or the hard to match tasks?
-      -- Do we want to optimize for toatl wait-time minimization or not having some tasks that never get satisfied because of greedy pruning of easy tasks?
+  -
       "An important question is how much the waiting times of hard-to-match pairs will improve as the
 percentage of easy-to-match pairs grows." (Anderson)
 
-
-  -- METHODOLOGY SECTION :p
-
   -- beamer, overlays, 'animation'
 
-  -- Find out how many cycles are in the graphs
 
 
-  -- If there's a system with regular enough gift influx and your task is popular, giving your offer NOW for priority gift receipt may be worth it. If users regularly give-first and enter a queue, then this dynamic could work even without many bonafide gifts, perhaps also milking chaining benefits and delayed exchange in a sense!
-
-  -- Kek, don't forget run-time
 
 
-  -- In our experience with UNOS, the number of altruists is typically around 5% the size of the candidate pool
-
-Leshno (2015) :: mismatched item may be preferable to waiting a long time
 
 
-  --
+Okidoki, I've got to figure out what tests I actually need to do!
+
+1) step size vs performance (on a matching algorithm basis)
+
+2) initial graph size vs performance (on a matching algorithm basis)
+2b) run length and performance
+-- Check total matched / total added
+
+3) matching algorithm vs performance
+  -- on basis of good step size for respective algorithms
+  -- with comparable initial graph size
+
+4) 1-3 with different p
+
+5) 1-3 with different p and HOR
+  -- That is, for given p, run matching algorithms with and without HOR and compare performance, count match wait time, etc.
+
+... and that's it, isn't it?
+
+I want to compare the matchers with and without HOR, their performance and cost, at different p.
+First, I want to find out what meta parameters to run experiments at.
+Then to run them.
+
+Can I do both at once?
+
+
+I did 1 and 3 at once because when done on the same graph series, the peak performances of each MA can be compared. 4 can then be done with 1 and 3 too.
+
+SO, yeah, I just need to double check HOR works and outputs what I want... and then I can just do by big grid search. -sigh-
+
+Meanhwile, think about how to do anything with the asymmetry. Ah, fuck, I should probably implement POD order.
+
+
+AH! I need the rare nodes! I need to tally this before the big grid search!
+
+Argh, work to do mateys <3 :).
+
+
+Okay, so for each unmatched ORpair I want to see if one of its tasks has degree 1. And just count these up ;-).
+
+What about matched ORpairs? I guess I want to count the product of their task degrees.
+
+That's about it for for the rare tasks. I guess I want two statistics there: average task popularity (product degree). Keep it simple.
+
+General graph: unmatcheable
+unmatched: total | avg popularity
+matched: total | avg popularity
+
+Okay, it's better to pickle the stats just in case I want to plot them nicely or compare.
+
+
+... shit, there's no good solution.
+
+If I get _live_ matcheable stats it could just be because all the task's matches actually got matched!
+So I have to use the one for the graph.
+
+What this means is that, basically, I have to just use one test range. period.

@@ -22,7 +22,7 @@ An \textbf{offer network} instance can be formally modeled as a directed graph, 
 A matching of users who can satisfy each other is a vertex cycle. See the simplest case below in Figure \ref{example2}. There is a match acceptance probability $p$, which is assumed to be uniform and independent\footnote{Moreover, Dickerson \cite{Dick} notes this assumption potentially also protect users, such as badly sick patients, from being marginalized in addition to being simpler to analyze.}.
 
 \subsection{Scale-Free Task Distribution}
-The ReadItSwapIt data is scale-free. This means that for large degrees $k$, the fraction of nodes with degree k is proportional to $k^{-\gamma}$\footnote{\url{https://en.wikipedia.org/wiki/Scale-free_network}}. $\gamma$ is called the power law exponent. Abbassi \cite{Abb2} do not provide much anlaytics of the ReadItSwapIt data; however they experiment with $\gamma = \{0,0.25,0.5,0.75,1\}$. In colloquial terms, this means that a few tasks are very popular and most tasks are only offered or requested by a few users. There will likely be a small difference in \textit{offer} and \textit{request} popularity for tasks.
+The ReadItSwapIt, Bookmooch, Ratebeer, and Reddit Gameswap data is scale-free. This means that for large degrees $k$, the fraction of nodes with degree k is proportional to $k^{-\gamma}$\footnote{\url{https://en.wikipedia.org/wiki/Scale-free_network}}. $\gamma$ is called the power law exponent. In colloquial terms, this means that a few tasks are very popular and most tasks are only offered or requested by a few users. There will likely be a small difference in \textit{offer} and \textit{request} popularity for tasks.
 
 Worth mentioning on this note is a user-centric study of the eBay graph \cite{ebay}\footnote{The data is obtained via crawling eBay feedback.}. They noted the following properties on eBay:
 
@@ -39,7 +39,59 @@ Dissasortativity implies that there will be little clustering: there will be man
 
 Densification over time implies new ORpairs are added at a faster rate than new tasks.
 
-\subsubsection{Scale-Free Graph Model}
+\subsubsection{Data Analysis}
+In this section the task popularity distributions of the datasets provided by Rappaz \cite{Rap1} are analyzed. The offer and request task distributions are similar; however the request task distributions have lower power-law exponents. That is, there are both more requests and more requests in many users' wish lists.
+
+Note that an task in a wish list can potentially be part of an exchange involving any task in a have list. This means that, if the average wish list size is $3.4$ and have list size is $5.4$, as in the ReadItSwapIt data \cite{Abb2}, a task in one wish list (degree one) may have in the model in this thesis degree $5$. This effectively makes the power-law exponent lower for small degrees (only asymptotically the same).
+
+\begin{figure}[!tbp]
+  \centering
+  \begin{minipage}[b]{0.45\textwidth}
+    \includegraphics[width=\textwidth]{logBookmooch1HaveList.png}
+    \caption{Bookmooch data over 1 year: have (offer) list}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.45\textwidth}
+    \includegraphics[width=\textwidth]{logBookmooch1WishList.png}
+    \caption{Bookmoch data over 1 year: wish (request) list}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[!tbp]
+  \centering
+  \begin{minipage}[b]{0.45\textwidth}
+    \includegraphics[width=\textwidth]{logBookmooch6HaveList.png}
+    \caption{Bookmooch data over 6 months: have (offer) list}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.45\textwidth}
+    \includegraphics[width=\textwidth]{logBookmooch6WishList.png}
+    \caption{Bookmoch data over 6 months: wish (request) list}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[!tbp]
+  \centering
+  \begin{minipage}[b]{0.45\textwidth}
+    \includegraphics[width=\textwidth]{logRatebeerHaveList.png}
+    \caption{Ratebeer data: have (offer) list}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.45\textwidth}
+    \includegraphics[width=\textwidth]{logRatebeerWishList.png}
+    \caption{Ratebeer data: wish (request) list}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[!tbp]
+  \centering
+  \begin{minipage}[b]{\textwidth}
+    \includegraphics[width=\textwidth]{logRedditWishList.png}
+    \caption{Reddit data: wish (request) list}
+  \end{minipage}
+\end{figure}
+
+\subsubsection{Scale-Free Graph Model} \label{sec:model}
 The goal is to generate a graph with a power law distribution with a small difference in the in and out degree distributions. To this end a generator for directed scale-free graphs is modified. The modified graph generator from NetworkX \cite{netX} is described by Bollobás, Borgs, Chayes, and Riordan in \textit{Directed Scale-Free Graphs} \cite{Bol}. It's a preferential attachment model.
 
 The graph starts with a directed triangle.
@@ -56,18 +108,22 @@ There are parameters $\delta_{in}$ and $\delta_{out}$ added to the degree so tha
 $$c_1 = \frac{\alpha + \beta}{1 + \delta_{in}(\alpha + \gamma)} \mbox{ and } c_2 = \frac{\beta + \gamma}{1 + \delta_{out}(\alpha + \gamma)}$$
 $$X_{IN} = 1 + 1/c_1 + c_2/c_1(\delta_{out} + 1_{\{\gamma \delta_{out}=0\}})$$
 $$X_{OUT} = 1 + 1/c_2 + c_1/c_2(\delta_{in} + 1_{\{\alpha \delta_{out}=0\}})$$
-$X_{IN}$ and $X_{OUT}$ are the power law exponents. Note that in this model in-degree and out-degree distributions are independent. The non-directed power law exponent is ???.
+$X_{IN}$ and $X_{OUT}$ are the power law exponents. Note that in this model in-degree and out-degree distributions are independent. The effect of a high $p_d$ (for similar offer/request task popularity) is not immediately theoretically clear.
 
 The modification of the model generates a set number of edges and for each edge adds a new task with probability $\alpha + \gamma$.
 
+Note that $ 0 < c_i \leq 1$ and $1 < X_{IN}$. If $\delta_{in} = \delta_{out} = 0$ and $\alpha = \gamma$, then $X_{IN} < 4$. Generally, for one exponent to be large the other has to be smaller.
+
+In this thesis the distribution is verified empirically in the same way as those in real datasets.
+
 \subsection{Dynamics}
-The dynamic offer network experiment starts with a scale free graph generated as above with $N^o_{initial}$ ORpairs. Each step 1 ORpair is added. There are $n^u$ ORpairs for each user, so every $n^u$ steps a user is added. With probability $\alpha + \gamma$ a new task is added with the ORpair. The experiment is run until $N^o_{end}$ ORpairs have been added. Every $n_{match}$ steps matchings are suggested, accepted or rejected by users, and accepted ORpairs are removed from the graph.
+The dynamic offer network experiment starts with a scale free graph generated as above with $N_{initial}$ ORpairs. Each step 1 ORpair is added. There are $n^u$ ORpairs for each user, so every $n^u$ steps a user is added. With probability $\alpha + \gamma$ a new task is added with the ORpair. The experiment is run until $N_{end}$ ORpairs have been added. Every $n_{match}$ steps matchings are suggested, accepted or rejected by users, and accepted ORpairs are removed from the graph.
 
 It is possible to make $n^u$ be probabilistic as with new tasks, and it's possible to make $n_{match}$ depend on the graph size.
 
-The series of graph updates from the start to completion $N_{end}^o$ are pre-generated so that all algorithms can be tested on the same dynamic graph. Note that the graph used to determine the scale-free task distribution (in NetworkX) is separate from the offer network graph (in Neo4k) that the matching is done on. This is to prevent ORpairs being matchend and removed from altering the task distribution\footnote{In reality, there will be a relation between these; however, modeling this relation is beyond the scope of the thesis. Futhermore, more matches of a certain task are likely to increase the task popularity.}
+The series of graph updates from the start to completion $N_{end}$ are pre-generated so that all algorithms can be tested on the same dynamic graph. Note that the graph used to determine the scale-free task distribution (in NetworkX) is separate from the offer network graph (in Neo4k) that the matching is done on. This is to prevent ORpairs being matchend and removed from altering the task distribution\footnote{In reality, there will be a relation between these; however, modeling this relation is beyond the scope of the thesis. Futhermore, more matches of a certain task are likely to increase the task popularity.}
 
-\subsection{Cycle Size and Acceptance Probability}
+\subsection{Cycle Size and Acceptance Probability} \label{sec:cyc size}
 
 \subsubsection{Motivation}
 The optimal solution clearly depends on acceptance probability, primarily biased by the optimal cycle size. In general, finding a maximum edge-disjoint cycle cover with cycle-weights (to account for acceptance probability) is NP-hard \cite{Bir}. Dickerson \cite{Dick} \cite{Dick3} find that integer linear programming with a model that optimizes for expected gain based on a uniform or bi-modal (high and low) acceptance probability performs linearly better\footnote{$A$ performs linearly better than $B$ means $Utility(A,n) = Utility(B,n) + \Omega(n)$.}.
@@ -98,7 +154,7 @@ In a cycle $c$ of size $k$, the probability of acceptance is $p_k = p^k$.
 
 Thus the expected number of satisfied users is: $\E[c_k] = k p^k$. For a given $p$, the best cycle size is given by $k = -\frac{1}{\ln p}$, and the best attainable for $p$ is $-\frac{1}{e \ln p}$.
 
-As can be seen in Figure \ref{best-k}, the optimal cycle size exponentially incresaes above $p = 0.95$ ($k \approx 19$), so the maximum without cycle-length constraints will likely suffice\footnote{Unless the algorithm retruns 1000+ length cycles.}. And in Figures \ref{eckp1} \ref{eckp2} one sees that $2$-cycles are optimal for low-p, $p < 0.7$. The PTIME heuristic is less clear for the following cases:
+As can be seen in Figure \ref{best-k}, the optimal cycle size exponentially incresaes above $p = 0.95$ ($k \approx 19$), so the maximum without cycle-length constraints will likely suffice\footnote{Unless the algorithm retruns 1000+ length cycles.}. And in Figures \ref{eckp1} \& \ref{eckp2} one sees that $2$-cycles are optimal for low-p, $p < 0.7$. The PTIME heuristic is less clear for the following cases:
 \begin{itemize}
   \item mid-p: $0.7 < p < 0.85$ where $ 2 < k < 10$ is optimal.
   \item high-p: $0.85 < p < 0.95$ where $ 10 < k < 30$ is optimal,
