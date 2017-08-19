@@ -22,6 +22,9 @@ def get_matches(driver, matchingAlgorithm, hold, p, justAddedIDs, stats, G):
         twomatch(driver)
     elif matchingAlgorithm == 'd':
         dynamicMatchL(driver, justAddedIDs)
+    elif matchingAlgorithm == 'n':
+        # do nothing
+        return (0, 0, 0, [], stats)
     else:
         raise ValueError('Incorrect matching algorithm key.')
     (total, totalPairs, cycles, stats, G) = removecycles(driver, hold, p, stats, G)
@@ -96,8 +99,10 @@ def run_test(driver, matchingAlgorithm, hold, p, Ninitial, Nend, nU, nMatch, G, 
 
     # Do initial matching, but don't collect stats
     #print("Step %s / %s" % (Nend - len(updates), Nend))
-    get_matches(driver, matchingAlgorithm, hold, p, nodeIDs, stats, G)
+    (total, totalPair, matchTime, cycles, stats)  = get_matches(driver, 'gsc', hold, 1, nodeIDs, stats, G)
     stats = (dict(), dict(), dict())
+
+    print("Initially matched %s pairs." % total)
 
     # Run dynamic test
     while updates:
@@ -257,18 +262,39 @@ if __name__ == "__main__":
         for testNum in [2]:
             if testNum == 0:
                 ## Spot test
-                filename = "grid/Ptest3"
+                filename = "grid/PtestGSC3"
                 Ninitial = 10000
                 Nend = 15000
                 nU = 10 # Irrelevant, really
-                Graphs = ["EN", "BM1"]
+                Graphs = ["EN"]
                 params = {
-                          "EN"  : ([1], {1 : [0.3]})
-                         ,"BM1" : ([0,1], {0 : [0.3], 1 : [0.7]})
+                          "EN"  : ([1], {1 : [0.3, 0.5, 0.7, 0.9, 1]})
                          }
-                matchingAlgorithms = ["gscpod", "gsc"] # t only for p < 0.7
-                nMatchRange = {"gsc"   : [5, 20, 50]
-                              ,"gscpod": [50, 100]}
+                matchingAlgorithms = ["gsc"] # t only for p < 0.7
+                nMatchRange = {"gsc"   : [20]}
+
+                # Initiall matched
+                # 0.3 - 90
+                # 0.5 - 400
+                # 0.7 - 1100
+                # 0.9 - 2400
+                # 1.0 - 3300
+                '''
+                if testNum == 0:
+                    ## Spot test
+                    filename = "grid/Ptest3"
+                    Ninitial = 10000
+                    Nend = 15000
+                    nU = 10 # Irrelevant, really
+                    Graphs = ["EN", "BM1"]
+                    params = {
+                              "EN"  : ([1], {1 : [0.3]})
+                             ,"BM1" : ([0,1], {0 : [0.3], 1 : [0.7]})
+                             }
+                    matchingAlgorithms = ["gscpod", "gsc"] # t only for p < 0.7
+                    nMatchRange = {"gsc"   : [5, 20, 50]
+                                  ,"gscpod": [50, 100]}
+                '''
 
             elif testNum == 1:
                 # further b test
@@ -286,18 +312,18 @@ if __name__ == "__main__":
                               ,"b"     : [40, 100]}
 
             elif testNum == 2:
-                filename = "timeTestLong"
+                filename = "timeTestLong2"
                 Ninitial = 100
                 Nend = 35000
                 nU = 10 # Irrelevant, really
-                Graphs = ["EN"]#"EN", "BM1"]
+                Graphs = ["RB1"]#"EN", "BM1"]
                 params = {
-                          "RB1"  : ([0], {0: [1]})
+                          "RB1"  : ([1], {1: [0.3, 0.5, 0.7, 0.9, 1]})
                           ,"EN"  : ([0], {0: [1]})
                           ,"BM1" : ([0], {0: [1]})
                         }
-                matchingAlgorithms = ["gsc"]
-                nMatchRange = {"gsc"   : [20]}
+                matchingAlgorithms = ["gscpod"]
+                nMatchRange = {"gscpod"   : [50]}
 
             runNum = 1
 
@@ -359,7 +385,7 @@ if __name__ == "__main__":
 
 
     elif num_args != 8:
-        print("Input args: [b gsc t d] [0 1] p Ninitial Nend nU nMatch")
+        print("Input args: [b gsc t d n] [0 1] p Ninitial Nend nU nMatch")
     else:
         # Read in data
         matchingAlgorithm = sys.argv[1]
@@ -385,7 +411,7 @@ if __name__ == "__main__":
         unmatcheable =  len(list(filter(lambda x: x[0] == '1' or x[1] == '1', G.edges())))
         print("There are %s unmatcheable ORpairs" % unmatcheable)
 
-        run_test(driver, matchingAlgorithm, hold, p, Ninitial, Nend, nU, nMatch, G, updates, Gname, results, timeResults, unmatcheable)
+        run_test(driver, matchingAlgorithm, hold, p, Ninitial, Nend, nU, nMatch, G, updates, Gname, results, timeResults, statList, unmatcheable)
         #delete_all(driver)
 
         for result in results:

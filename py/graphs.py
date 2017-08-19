@@ -116,17 +116,55 @@ def makeTotalMatchDict():
 
     pickle.dump(statListDict, open("results/statListDict.p", "wb"))
 
+    def countMatched(i):
+        return i[0][0] * i[1]
+
     totalMatchDict = dict()
     for fname, runs in statListDict.items():
         tml = []
         for statList in runs:
             pureMatched = sum(statList[0].values())
             statList[1][(0,0)] = 0
-            holdMatched = sum(statList[1].values())
+            holdMatched = sum(map(countMatched, statList[1].items()))
             tml.append(pureMatched + holdMatched)
         totalMatchDict[fname] = tml
 
     pickle.dump(totalMatchDict, open("results/totalMatchDict.p", "wb"))
+
+# For Ptest
+def makeTotalMatchDictP():
+    statListDict = dict()
+    ps = []
+    for hold in [0, 1]:
+        bestTMs = []
+        if hold == 1:
+            ps = [0.9, 0.8, 0.7]
+        else:
+            ps = [0.9]
+        for p in ps:
+            for matchingAlgorithm in ["GSC", "DYN", "GSCPoD", "MAX", "TWO"]:
+                statListDict['RB1'+str(hold + p) + matchingAlgorithm] = pickle.load(open("results/grid/Ptest-RB1-"+matchingAlgorithm+"-"+str(p)+"-"+str(hold)+".p", "rb"))
+
+    for matchingAlgorithm in ["GSC", "MAX"]:
+        statListDict['EN'+str(1 + 0.3) + matchingAlgorithm] = pickle.load(open("results/grid/Btest-EN-"+matchingAlgorithm+"-0.3-1.p", "rb"))
+        statListDict['BM1'+str(1 + 0.5) + matchingAlgorithm] = pickle.load(open("results/grid/Btest-BM1-"+matchingAlgorithm+"-0.5-1.p", "rb"))
+
+    pickle.dump(statListDict, open("results/statListDictP.p", "wb"))
+
+    def countMatched(i):
+        return i[0][0] * i[1]
+
+    totalMatchDict = dict()
+    for fname, runs in statListDict.items():
+        tml = []
+        for statList in runs:
+            pureMatched = sum(statList[0].values())
+            statList[1][(0,0)] = 0
+            holdMatched = sum(map(countMatched, statList[1].items()))
+            tml.append(pureMatched + holdMatched)
+        totalMatchDict[fname] = tml
+
+    pickle.dump(totalMatchDict, open("results/totalMatchDictP.p", "wb"))
 
 def getTotalMatchDict():
     totalMatchDict = pickle.load(open("results/totalMatchDict.p", "rb"))
@@ -135,6 +173,27 @@ def getTotalMatchDict():
 def getStatListDict():
     statListDict = pickle.load(open("results/statListDict.p", "rb"))
     return statListDict
+
+def getTotalMatchDictP():
+    totalMatchDict = pickle.load(open("results/totalMatchDictP.p", "rb"))
+    return totalMatchDict
+
+def getStatListDictP():
+    statListDict = pickle.load(open("results/statListDictP.p", "rb"))
+    return statListDict
+
+def countMatched(i):
+    return i[0][0] * i[1]
+
+def upDateTotalMatched(filename):
+    runs = pickle.load(open(filename[:-3] + 'p', "rb"))
+    tml = []
+    for statList in runs:
+        pureMatched = sum(statList[0].values())
+        statList[1][(0,0)] = 0
+        holdMatched = sum(map(countMatched, statList[1].items()))
+        tml.append(pureMatched + holdMatched)
+    return tml
 
 # nUtest
 
@@ -150,8 +209,39 @@ def getDatasets(filenames):
         datasets.setdefault(Gname, dict())
         Gdata = dict()
         for column in data.T[2:]:
+            if column[0] == 'totalMatched':
+                Gdata[column[0]] = upDateTotalMatched(filename)
+            else:
+                Gdata[column[0]] = column[1:].astype(float)
+        datasets[Gname][matchingAlgorithm] = Gdata
+    return datasets
+
+def getDatasetsN(filenames):
+    datasets = dict()
+    for filename in filenames:
+        data = np.genfromtxt(filename, dtype=str, delimiter=',')
+        Gname = data[1][0]
+        matchingAlgorithm = data[1][1]
+        datasets.setdefault(Gname, dict())
+        Gdata = dict()
+        for column in data.T[2:]:
             Gdata[column[0]] = column[1:].astype(float)
         datasets[Gname][matchingAlgorithm] = Gdata
+    return datasets
+
+def getDatasetsP(filenames):
+    datasets = dict()
+    for filename in filenames:
+        data = np.genfromtxt(filename, dtype=str, delimiter=',')
+        Gname = data[1][0]
+        p = data[1][3]
+        Gdata = dict()
+        for column in data.T[2:]:
+            if column[0] == 'totalMatched':
+                Gdata[column[0]] = upDateTotalMatched(filename)
+            else:
+                Gdata[column[0]] = column[1:].astype(float)
+        datasets[p] = Gdata
     return datasets
 
 # name dict
@@ -202,7 +292,10 @@ def plotMetrics(datasets, xLabel, xData, title=""):
         ax.set_xticks(xTestPoints, minor=True)
         for matchingAlgorithm, GAdata in Gdata.items():
             #if not matchingAlgorithm == 't':
-            plt.plot(GAdata[xData], GAdata['avgWaitTimeMatched'], colors[matchingAlgorithm], label=matchingAlgorithm)
+            if xData == 'nMatch':
+                plt.plot(GAdata[xData], GAdata['avgWaitTimeMatched'] - GAdata[xData] / 2, colors[matchingAlgorithm], label=matchingAlgorithm)
+            else:
+                plt.plot(GAdata[xData], GAdata['avgWaitTimeMatched'] - 100 / 2, colors[matchingAlgorithm], label=matchingAlgorithm)
             plt.plot(GAdata[xData], GAdata['avgWaitTimeUnmatched'], colors[matchingAlgorithm]+'--')
         plt.title('Wait Time')
         plt.xlabel(xLabel)
@@ -224,6 +317,7 @@ def plotMetrics(datasets, xLabel, xData, title=""):
     #plt.show()
 
 def plotMetricsB(datasets, xLabel, xData, title=""):
+    #totalMatchDict = getTotalMatchDictP()
     for Gname, Gdata in datasets.items():
         plt.figure(Gname + " " + title, figsize=(11.69, 8.27))
         ax = plt.subplot(2,3,1)
@@ -243,7 +337,7 @@ def plotMetricsB(datasets, xLabel, xData, title=""):
         ax.set_xticks(xTestPoints, minor=True)
         for matchingAlgorithm, GAdata in Gdata.items():
             #if not matchingAlgorithm == 't':
-            plt.plot(GAdata[xData], GAdata['avgWaitTimeMatched'], colors[matchingAlgorithm], label=matchingAlgorithm)
+            plt.plot(GAdata[xData], GAdata['avgWaitTimeMatched'] - GAdata[xData] / 2, colors[matchingAlgorithm], label=matchingAlgorithm)
             plt.plot(GAdata[xData], GAdata['avgWaitTimeUnmatched'], colors[matchingAlgorithm]+'--')
         plt.title('Wait Time')
         plt.xlabel(xLabel)
@@ -299,18 +393,14 @@ def plotMetricsB(datasets, xLabel, xData, title=""):
         plt.close()
 
 def plotMetricsB2(datasets, xLabel, xData, title=""):
-    totalMatchDict = getTotalMatchDict()
+    #totalMatchDict = getTotalMatchDict()
     for Gname, Gdata in datasets.items():
         plt.figure(Gname + " " + title, figsize=(11.69, 8.27))
         ax = plt.subplot(2,3,1)
         xTestPoints = Gdata['gsc'][xData]
         ax.set_xticks(xTestPoints, minor=True)
         for matchingAlgorithm, GAdata in Gdata.items():
-            if not matchingAlgorithm == 't':
-                totalMatched = totalMatchDict[Gname+str(GAdata['hold'][0] + GAdata['p'][0]) + mName[matchingAlgorithm]]
-                plt.plot(GAdata[xData], totalMatched, colors[matchingAlgorithm], label=matchingAlgorithm)
-            else: # matchingAlgorithm == 't':
-                plt.plot(GAdata[xData], GAdata['totalMatched'], colors[matchingAlgorithm], label=matchingAlgorithm)
+            plt.plot(GAdata[xData], GAdata['totalMatched'], colors[matchingAlgorithm], label=matchingAlgorithm)
             plt.plot(GAdata[xData], GAdata['totalHeld'], colors[matchingAlgorithm]+'--')
         plt.title('Total Matched/Held')
         plt.xlabel(xLabel)
@@ -322,7 +412,7 @@ def plotMetricsB2(datasets, xLabel, xData, title=""):
         ax.set_xticks(xTestPoints, minor=True)
         for matchingAlgorithm, GAdata in Gdata.items():
             #if not matchingAlgorithm == 't':
-            plt.plot(GAdata[xData], GAdata['avgWaitTimeMatched'], colors[matchingAlgorithm], label=matchingAlgorithm)
+            plt.plot(GAdata[xData], GAdata['avgWaitTimeMatched'] - GAdata[xData] / 2, colors[matchingAlgorithm], label=matchingAlgorithm)
             plt.plot(GAdata[xData], GAdata['avgWaitTimeUnmatched'], colors[matchingAlgorithm]+'--')
         plt.title('Wait Time')
         plt.xlabel(xLabel)
@@ -387,6 +477,7 @@ tests = {
         ,"PtestB2-1":False
         ,"PvTM":False
         ,"sPotTest":False
+        ,"PtestGSC":False
         }
 
 #tests["nMatchtest"] = True
@@ -398,7 +489,10 @@ tests = {
 #tests["PtestB2-1"] = True
 #tests["PvTM"] = True
 #tests["sPotTest"] = True
+tests["PtestGSC"] = True
 
+#makeTotalMatchDict()
+#makeTotalMatchDictP()
 
 
 if tests["nMatchtest"]:
@@ -415,7 +509,7 @@ if tests["NinitialTest"]:
     #filenames = glob.glob("results/Ninitialtest*.csv")
     filenames = glob.glob("results/NinitialTest*.csv")
     #print(filenames)
-    datasets = getDatasets(filenames)
+    datasets = getDatasetsN(filenames)
     plotMetrics(datasets, 'Ninitial', 'Ninitial', "Ninitial")
     #plt.show()
 
@@ -487,7 +581,7 @@ if tests["timeTest"]:
     #plt.show()
 
 if tests["series"]:
-    series = getDatasets(glob.glob("results/timeTestLong*.csv"))
+    series = getDatasets(glob.glob("results/timeTestLong-*.csv"))
 
     plt.figure("Graph Size Over Time", figsize=(11.69, 8.27))
     i = 1
@@ -525,6 +619,22 @@ if tests["series"]:
     plt.savefig("results/plot/timeSeries.png")
     plt.close()
 
+    series = getDatasetsP(glob.glob("results/timeTestLong2-*.csv"))
+    plt.figure("Graph Size Over Time - p", figsize=(11.69, 8.27))
+    for p, Gdata in series.items():
+        NORseries = Gdata['NORpairs']
+        stepSeries = Gdata['Step']
+        plt.plot(stepSeries, NORseries, colors['gsc'], label='p = ' + str(p))
+    plt.xlabel('Step')
+    plt.ylabel('NORpairs')
+    plt.title("RB1 Graph Size Over Time - p")
+    plt.legend()
+    plt.gca().set_aspect('equal')
+
+    plt.tight_layout
+    plt.savefig("results/plot/timeSeries2.png")
+    plt.close()
+
 if tests["PtestB2-0"]:
     datasets90 = getDatasets(glob.glob("results/grid/Ptest2-RB1-*9-0.csv"))
     plotMetricsB2(datasets90, 'Match Frequency', 'nMatch', "p=0.9, hold=0")
@@ -540,10 +650,18 @@ if tests["PtestB2-1"]:
         plotMetricsB2(getDatasets(glob.glob("results/grid/Ptest2-RB1-*"+str(p)+"-1.csv"))
                      ,'Match Frequency', 'nMatch', 'p='+str(p)+', hold=1')
 
+        # Initiall matched
+        # 0.3 - 90
+        # 0.5 - 400
+        # 0.7 - 1100
+        # 0.9 - 2400
+        # 1.0 - 3300
+
+
 if tests["PvTM"]:
     totalMatchDict = getTotalMatchDict()
     ps = []
-    plt.figure("p vs Total Matched")
+    plt.figure("p vs Total Matched", figsize=(16, 4))
     for hold in [0, 1]:
         bestTMs = []
         if hold == 1:
@@ -558,7 +676,30 @@ if tests["PvTM"]:
             for matchingAlgorithm in ['GSC', 'GSCPoD', 'DYN']:
                 best = max(best, max(totalMatchDict['RB1'+str(hold + p) + matchingAlgorithm]))
             bestTMs.append(best)
-        plt.subplot(1,2,hold+1)
+        bestTMsAccounted = []
+        if hold == 1:
+            bestTMsAccounted.append(bestTMs[0] - (2400 - 2400))
+            bestTMsAccounted.append(bestTMs[1] - (2400 - 1100))
+            bestTMsAccounted.append(bestTMs[4] - (2400 - 400))
+            bestTMsAccounted.append(bestTMs[5] - (2400 - 90))
+            plt.subplot(1,4,4)
+            plt.plot([0.9, 0.7, 0.5, 0.3], bestTMsAccounted, 'o')
+            plt.xlabel('p')
+            plt.ylabel('Total Matched')
+            plt.title("RB1 - " + str(hold) + " - Accounted")
+        if hold == 0:
+            bestTMsAccounted.append(bestTMs[0] - (2400 - 2400))
+            bestTMsAccounted.append(bestTMs[1] - (2400 - 1100))
+            bestTMsAccounted.append(bestTMs[2] - (2400 - 400))
+            bestTMsAccounted.append(bestTMs[3] - (2400 - 90))
+            plt.subplot(1,4,2)
+            plt.plot([0.9, 0.7, 0.5, 0.3], bestTMsAccounted, 'o')
+            plt.xlabel('p')
+            plt.ylabel('Total Matched')
+            plt.title("RB1 - " + str(hold) + " - Accounted")
+
+
+        plt.subplot(1,4,hold*2+1)
         plt.plot(ps, bestTMs, 'o')
         plt.xlabel('p')
         plt.ylabel('Total Matched')
@@ -579,3 +720,39 @@ if tests["sPotTest"]:
     plotMetricsB2(getDatasets(glob.glob("results/grid/Ptest3-BM1-*0.7-1.csv"))
                   ,'Match Frequency', 'nMatch', 'p=0.7, hold=1')
 #plt.show()
+
+
+if tests["PtestGSC"]:
+    gscd = dict()
+    filenames = ''
+    for i in [1,2,3]:
+        gscd[i] = []
+        if i > 1:
+            filenames = glob.glob("results/grid/PtestGSC" + str(i) + "*.csv")
+        else:
+            filenames = glob.glob("results/grid/PtestGSC-*.csv")
+        for filen in filenames:
+            gscd[i].append(getDatasets([filen]))
+    plt.figure("p vs Total Matched", figsize=(11.69, 8.27))
+    for num, gscL in gscd.items():
+        ps = []
+        tm = []
+        ma = ''
+        ni = 0
+        ne = 0
+        for gscR in gscL:
+            for Gname, Gdata in gscR.items():
+                for matchingAlgorithm, GAdata in Gdata.items():
+                    ps.append(GAdata['p'])
+                    tm.append(GAdata['totalMatched'])
+                    ma = matchingAlgorithm
+                    ni = GAdata['Ninitial']
+                    ne = GAdata['Nend']
+        plt.subplot(1,3,num)
+        plt.plot(ps, tm, 'o')
+        plt.xlabel('p')
+        plt.ylabel('Total Matched')
+        plt.title("RB1:gsc" + " " + str(ni) + " - " + str(ne))
+    plt.tight_layout
+    plt.savefig("results/plot/PvTM-GSC.png")
+    plt.close()
