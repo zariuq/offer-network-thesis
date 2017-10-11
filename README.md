@@ -42,7 +42,7 @@ OR-pairs can be in multiple cycles in the graph, but normally only used in one o
 Additionally, HOR saves some potential for future matching steps, which has been found to be helpful when intelligently done in kidney exchange networks.
 
 
-Unfortunately, I lazily allowed rematching of OR-pairs even after one user rejects the match. I suspect the results will be more interesting when this 'feature' is removed.
+Unfortunately, I lazily allowed rematching of OR-pairs even after one user rejects the match. I suspect the results will be more interesting when this 'feature' is removed. Another small error that was easier to correct has been corrected in time for the slides, so the slides have more accurate/up-to-date plots.
 
 HOR can be extended to a form of asymmetric exchanges resembling a formalism for gifts.
 
